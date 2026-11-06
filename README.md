@@ -6,7 +6,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com/)
 [![Qdrant](https://img.shields.io/badge/Qdrant-Persistent%20Disk-red.svg)](https://qdrant.tech/)
 [![HuggingFace](https://img.shields.io/badge/Sentence--Transformers-all--MiniLM--L6--v2-yellow.svg)](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
-[![Tests](https://img.shields.io/badge/Tests-21%2F21%20Passing-brightgreen.svg)]()
+[![CrossEncoder](https://img.shields.io/badge/Cross--Encoder-ms--marco--MiniLM--L--6--v2-orange.svg)](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2)
+[![Tests](https://img.shields.io/badge/Tests-36%2F36%20Passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 ---
@@ -14,145 +15,102 @@
 ## 1. Project Overview
 
 **VeriWeave** is an industry-standard, production-grade Retrieval-Augmented Generation (RAG) platform. It goes beyond conventional "toy" PDF Q&A demos by establishing an engineering foundation for:
-- Multi-format document ingestion (PDF, DOCX, TXT, Markdown) with strict physical & logical page boundary tracking.
-- Recursive hierarchical chunking preserving character offsets, token counts, and source metadata.
-- Lightweight local dense embedding generation (`all-MiniLM-L6-v2`, 384 dimensions) optimized for 8 GB RAM Apple Silicon Macs (CPU/MPS acceleration).
-- Persistent on-disk vector storage via Qdrant (`./data/qdrant_storage`), ensuring collections survive process restarts.
-- Grounded answer generation using local Ollama LLMs (`llama3.2:1b`, `llama3.2:3b`, `qwen2.5:1.5b`) with an offline extractive fallback engine.
-- Verifiable inline source citations (`[Doc: <filename>, Page: <page>]`) linked to exact chunk snippets and similarity scores.
-- Fully typed, validated FastAPI REST services with interactive Swagger/OpenAPI documentation.
+- **Multi-Format Ingestion**: PDF, DOCX, TXT, and Markdown parsing with strict physical & logical page boundary tracking.
+- **Recursive Hierarchical Chunking**: Splits text preserving character offsets, token counts, and parent document metadata.
+- **Dense Local Embeddings**: `all-MiniLM-L6-v2` (384 dimensions) optimized for 8 GB RAM Apple Silicon Macs (CPU/MPS acceleration).
+- **Persistent Qdrant Storage**: File-backed on-disk storage (`./data/qdrant_storage`), ensuring collections survive process restarts.
+- **Advanced Multi-Strategy Retrieval (Phase 2)**:
+  - **Baseline Dense Similarity**: Fast cosine distance nearest-neighbor search.
+  - **Multi-Query Retrieval**: LLM-generated semantic query variants fused via Reciprocal Rank Fusion (RRF).
+  - **Hypothetical Document Embeddings (HyDE)**: Synthesizes hypothetical reference passages and retrieves matching true document chunks.
+  - **Query Decomposition**: Decomposes compound questions into atomic sub-queries and aggregates evidence.
+  - **Lexical Sparse BM25**: Okapi BM25 index built over identical Qdrant chunk IDs to solve vocabulary mismatch.
+  - **Hybrid Dense + Sparse**: Dual-channel retrieval fused via configurable Reciprocal Rank Fusion ($k=60$).
+  - **Cross-Encoder Reranking**: High-precision joint cross-attention scoring using `ms-marco-MiniLM-L-6-v2` with sigmoid probability mapping.
+  - **Metadata Filtering**: Scoped filtering across `doc_id`, `filename`, `page_number`, and custom key-value pairs.
+- **Grounded Answer Generation**: Local Ollama LLMs (`llama3.2:1b`, `llama3.2:3b`) with an offline extractive fallback engine.
+- **Verifiable Inline Citations**: Every claim is mapped to `[Doc: <filename>, Page: <page>]` with similarity scores and excerpts.
+- **Comprehensive Benchmarks**: Quantitative evaluation comparing all strategies using Recall@K, Precision@K, MRR, and NDCG.
 
 ---
 
-## 2. System Architecture
+## 2. Multi-Strategy Architecture
 
 ```
-                      +-----------------------------------------+
-                      |         User Request / React UI         |
-                      +--------------------+--------------------+
-                                           |
-                                           v
-                      +-----------------------------------------+
-                      |         FastAPI REST API Gateway        |
-                      |   /upload   /documents   /chat  /health |
-                      +--------------------+--------------------+
-                                           |
-            +------------------------------+-------------------------------+
-            |                                                              |
-            v (Ingestion Path)                                             v (Retrieval & Generation Path)
-+-----------------------+                                      +-----------------------+
-|  Document Loaders     |                                      | Dense Query Encoder   |
-|  (PDF, DOCX, TXT, MD) |                                      | (Sentence-Transformers|
-+-----------+-----------+                                      | all-MiniLM-L6-v2)     |
-            | Raw Pages                                        +-----------+-----------+
-            v                                                              | Query Vector
-+-----------------------+                                                  |
-| Recursive Chunker     |                                                  v
-| (Preserves metadata & |                                      +-----------------------+
-|  page numbers)        |                                      | Persistent Qdrant     |
-+-----------+-----------+                                      | On-Disk Vector DB     |
-            | Chunks + Offsets                                 +-----------+-----------+
-            v                                                              | Top-K Matches
-+-----------------------+                                                  v
-| Dense Chunk Encoder   |                                      +-----------------------+
-| (384-dim embeddings)  |                                      | Context Formatter &   |
-+-----------+-----------+                                      | Grounding Engine      |
-            | Chunks + Embeddings                              +-----------+-----------+
-            v                                                              | Prompt + Context
-+-----------------------+                                                  v
-| Persistent Qdrant     |                                      +-----------------------+
-| Vector Store (Disk)   +------------------------------------->| Ollama LLM / Fallback |
-+-----------------------+                                      | (Grounded Answer +    |
-                                                               |  Source Citations)    |
-                                                               +-----------------------+
+                                  +-----------------------------------------+
+                                  |         User Request / React UI         |
+                                  +--------------------+--------------------+
+                                                       |
+                                                       v
+                                  +-----------------------------------------+
+                                  |        FastAPI REST API Gateway         |
+                                  |   /upload   /documents   /chat  /health |
+                                  +--------------------+--------------------+
+                                                       |
+            +------------------------------------------+-------------------------------------------+
+            | (Ingestion Path)                                                                     | (Query Path)
+            v                                                                                      v
++-----------------------+                                                      +---------------------------------------+
+|  Document Loaders     |                                                      |         Retrieval Orchestrator        |
+|  (PDF, DOCX, TXT, MD) |                                                      | Strategy: baseline | hybrid | hyde ... |
++-----------+-----------+                                                      +-------------------+-------------------+
+            | Raw Pages                                                                            |
+            v                                                 +--------------------+---------------+--------------------+
++-----------------------+                                     |                    |                    |               |
+| Recursive Chunker     |                                     v                    v                    v               v
+| (Preserves metadata & |                               +-----------+        +-----------+        +-----------+   +-----------+
+|  page numbers)        |                               | MultiQuery|        |   HyDE    |        |   Dense   |   |   BM25    |
++-----------+-----------+                               | Expansion |        | Synthesis |        | Embedding |   |  Lexical  |
+            | Chunks + Offsets                          +-----+-----+        +-----+-----+        +-----+-----+   +-----+-----+
+            v                                                 |                    |                    |               |
++-----------------------+                                     +--------------------+--------------------+---------------+
+| Dense Chunk Encoder   |                                                                  |
+| (384-dim embeddings)  |                                                                  v
++-----------+-----------+                                                      +---------------------------------------+
+            | Chunks + Embeddings                                              |    Reciprocal Rank Fusion Engine      |
+            v                                                                  |      RRF(d) = sum( 1 / (k + rank) )   |
++-----------------------+                                                      +-------------------+-------------------+
+| Persistent Qdrant     |<=========================================================================| (Vector Search)
+| Vector Store (Disk)   |                                                                  |
++-----------------------+                                                                  v
+                                                                               +---------------------------------------+
+                                                                               |      Cross-Encoder Reranker           |
+                                                                               |   (ms-marco-MiniLM-L-6-v2)            |
+                                                                               +-------------------+-------------------+
+                                                                                                   | Top-K Candidates
+                                                                                                   v
+                                                                               +---------------------------------------+
+                                                                               |  Context Formatter & Grounding Engine |
+                                                                               +-------------------+-------------------+
+                                                                                                   | Prompt + Citations
+                                                                                                   v
+                                                                               +---------------------------------------+
+                                                                               |      Ollama LLM / Grounded Fallback   |
+                                                                               | (Answer + Verified [Doc, Page] Cit.)  |
+                                                                               +---------------------------------------+
 ```
 
 ---
 
-## 3. Repository Organization
+## 3. Empirical Retrieval Benchmark Results
 
-```
-RAG-veriWeave/
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── v1/
-│   │   │   │   ├── endpoints/
-│   │   │   │   │   ├── documents.py    # Document upload, list, detail, delete
-│   │   │   │   │   ├── chat.py         # Grounded RAG query endpoint
-│   │   │   │   │   └── health.py       # Storage, embedding, LLM diagnostics
-│   │   │   │   └── api.py              # API v1 router aggregator
-│   │   │   └── deps.py                 # Dependency injection providers
-│   │   ├── core/
-│   │   │   ├── config.py               # Pydantic Settings & environment config
-│   │   │   ├── exceptions.py           # Domain exceptions & error handlers
-│   │   │   └── logging.py              # Structured logging (Loguru)
-│   │   ├── embeddings/
-│   │   │   ├── base.py                 # Embedding model interface
-│   │   │   └── sentence_transformer.py # Local Sentence-BERT wrapper (MPS/CPU)
-│   │   ├── generation/
-│   │   │   ├── grounded_generator.py   # Grounding & citation assembly
-│   │   │   ├── ollama_client.py        # Ollama HTTP client & fallback synthesizer
-│   │   │   └── prompts.py              # Strict grounding prompt templates
-│   │   ├── ingestion/
-│   │   │   ├── chunkers/
-│   │   │   │   └── recursive_chunker.py # Recursive text splitter with metadata
-│   │   │   ├── loaders/
-│   │   │   │   ├── base.py             # RawDocumentPage abstraction
-│   │   │   │   ├── docx_loader.py      # python-docx parser (paragraphs & tables)
-│   │   │   │   ├── factory.py          # Format resolution & validation
-│   │   │   │   ├── pdf_loader.py       # pypdf page-by-page extractor
-│   │   │   │   └── txt_loader.py       # Plain text & markdown parser
-│   │   │   └── pipeline.py             # End-to-end ingestion orchestrator
-│   │   ├── retrieval/
-│   │   │   ├── base.py                 # Retriever interface
-│   │   │   └── similarity_retriever.py # Dense cosine similarity retriever
-│   │   ├── schemas/
-│   │   │   ├── chat.py                 # ChatRequest, ChatResponse, Citation
-│   │   │   ├── document.py             # DocumentMetadata, Chunk, Responses
-│   │   │   └── health.py               # ComponentStatus, HealthResponse
-│   │   └── main.py                     # FastAPI application factory & lifespan
-│   ├── tests/
-│   │   ├── conftest.py                 # Isolated test fixtures & mock embeddings
-│   │   ├── test_api.py                 # Integration tests for REST endpoints
-│   │   ├── test_chunking.py            # Chunker & metadata preservation tests
-│   │   ├── test_embeddings.py          # Sentence-Transformers tests
-│   │   ├── test_generation.py          # Grounded generator & citation tests
-│   │   ├── test_ingestion.py           # PDF, DOCX, TXT loader tests
-│   │   ├── test_retrieval.py           # Similarity retrieval tests
-│   │   ├── test_storage.py             # Persistent Qdrant & restart tests
-│   │   └── verify_phase1_live.py       # End-to-end live verification script
-│   └── requirements.txt                # Production Python dependencies
-├── data/
-│   ├── documents/                      # Local uploaded document repository
-│   └── qdrant_storage/                 # Persistent on-disk Qdrant vector database
-├── datasets/
-│   └── sample_docs/                    # Benchmark sample documents (PDF, DOCX, TXT)
-├── docker/                             # Docker & deployment configs
-├── docs/
-│   ├── architecture.md                 # System architecture specification
-│   └── phase1_guide.md                 # Phase 1 technical & verification guide
-├── experiments/                        # Benchmark results & tracking logs
-├── exported_models/                    # Fine-tuned model weights
-├── frontend/                           # React + TypeScript + Vite UI
-├── training/
-│   └── kaggle/                         # GPU training notebooks & scripts
-├── .env.example                        # Template environment variables
-├── .gitignore                          # Strict gitignore rules
-├── pyproject.toml                      # Pytest and packaging configuration
-└── README.md                           # Project documentation
-```
+Evaluated against 10 gold-standard queries across technical reference documents:
+
+| Retrieval Strategy | Recall@1 | Recall@3 | Recall@5 | MRR | NDCG@3 | NDCG@5 | Latency (ms) | Candidates |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Baseline (Dense)** | 1.000 | 1.000 | 1.000 | 1.000 | 0.977 | 0.995 | 4.08 ms | 5.0 |
+| **Multi-Query** | 1.000 | 1.000 | 1.000 | 1.000 | 0.977 | 0.995 | 17.29 ms | 5.0 |
+| **HyDE** | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 8.70 ms | 5.0 |
+| **Query Decomposition** | 1.000 | 1.000 | 1.000 | 1.000 | 0.977 | 0.995 | 7.34 ms | 5.0 |
+| **RAG Fusion (RRF)** | 1.000 | 1.000 | 1.000 | 1.000 | 0.930 | 0.988 | 3.84 ms | 5.0 |
+| **Hybrid (Dense+BM25)** | 1.000 | 1.000 | 1.000 | 1.000 | 0.930 | 0.984 | 3.98 ms | 5.0 |
+| **Hybrid + Cross-Encoder** | 1.000 | 1.000 | 1.000 | 1.000 | 0.977 | 0.995 | 50.65 ms | 10.0 |
 
 ---
 
 ## 4. Quickstart Guide
 
-### 4.1 Prerequisites
-- Apple Silicon Mac (or Linux / Windows with Python 3.10+)
-- Python 3.12 (recommended)
-- (Optional) [Ollama](https://ollama.ai) installed with `ollama run llama3.2:1b`
-
-### 4.2 Installation
+### 4.1 Prerequisites & Installation
 ```bash
 # Clone repository
 git clone https://github.com/your-username/RAG-veriWeave.git
@@ -164,123 +122,71 @@ source .venv/bin/activate
 
 # Install dependencies
 pip install -r backend/requirements.txt
-
-# Configure environment
 cp .env.example .env
 ```
 
-### 4.3 Run Automated Tests
+### 4.2 Run Automated Tests
 ```bash
 .venv/bin/pytest backend/tests -v
 ```
-All **21 unit and integration tests** execute in under 0.5s:
-```text
-============================== 21 passed in 0.29s ==============================
-```
+All **36 tests pass in under 1 second** (`36 passed in 0.83s`).
 
-### 4.4 Run Live End-to-End Verification
+### 4.3 Run Live Multi-Strategy Verification & Benchmarks
 ```bash
-.venv/bin/python3 backend/tests/verify_phase1_live.py
-```
-This runs a complete live ingestion of PDF, DOCX, and TXT files, queries Qdrant with dense vectors, verifies grounded generation and citation formatting, and tests cross-restart persistence.
+# Live verification across all 7 retrieval scenarios
+.venv/bin/python3 backend/tests/verify_phase2_live.py
 
-### 4.5 Start Backend Server
+# Quantitative retrieval benchmark
+.venv/bin/python3 experiments/benchmark_retrieval.py
+```
+
+### 4.4 Start Backend Server
 ```bash
 .venv/bin/uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Interactive API documentation:
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
 ---
 
-## 5. API Reference & Examples
+## 5. API Usage Examples (Phase 2 Strategies)
 
-### 5.1 System Health
-```bash
-curl -s http://127.0.0.1:8000/api/v1/health | python3 -m json.tool
-```
-```json
-{
-    "app_name": "VeriWeave",
-    "status": "ok",
-    "version": "0.1.0",
-    "components": {
-        "vector_storage": {
-            "status": "ok",
-            "details": {
-                "engine": "Qdrant (persistent disk)",
-                "storage_path": "data/qdrant_storage",
-                "collection": "veriweave_documents",
-                "points_count": 7
-            }
-        },
-        "embeddings": {
-            "status": "ok",
-            "details": {
-                "model_name": "sentence-transformers/all-MiniLM-L6-v2",
-                "dimension": 384,
-                "device": "cpu"
-            }
-        },
-        "llm_engine": {
-            "status": "ok",
-            "details": {
-                "configured_model": "llama3.2:1b",
-                "fallback_active": true
-            }
-        }
-    }
-}
-```
-
-### 5.2 Upload Document
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/documents/upload \
-  -F "file=@datasets/sample_docs/rag_architectures.pdf"
-```
-```json
-{
-    "doc_id": "beb0b1c7-8dd4-49d6-8857-bc1b69eff21b",
-    "filename": "rag_architectures.pdf",
-    "file_type": "pdf",
-    "file_size_bytes": 2129,
-    "page_count": 2,
-    "chunk_count": 2,
-    "status": "indexed",
-    "message": "Document successfully extracted, chunked, embedded, and indexed."
-}
-```
-
-### 5.3 Ask Question (Chat & Grounded Citations)
+### 5.1 Hybrid Retrieval (Dense + BM25 with RRF)
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/chat \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What are the trade-offs of BM25 sparse retrieval vs dense embeddings?",
+    "retrieval_strategy": "hybrid",
     "top_k": 2
   }'
 ```
-```json
-{
-    "query": "What are the trade-offs of BM25 sparse retrieval vs dense embeddings?",
-    "answer": "Based on the retrieved source documents, here is the verified information:\n\n- Sparse Retrieval and Lexical Matching  Sparse retrieval algorithms like BM25 leverage term frequencies and inverse document frequencies. They excel at exact keyword matching, technical identifiers, and rare terms where dense embeddings might suffer from vocabulary mismatch... [Doc: retrieval_strategies.docx, Page: 1]\n- Advanced Retrieval Strategies in RAG  Dense Retrieval and Embedding Representations  Dense retrieval maps documents and queries into continuous semantic vector spaces using transformer models such as Sentence-BERT or BGE... [Doc: retrieval_strategies.docx, Page: 1]",
-    "citations": [
-        {
-            "citation_id": 1,
-            "doc_id": "4162968b-5937-4697-9c85-25b59c462fda",
-            "filename": "retrieval_strategies.docx",
-            "page_number": 1,
-            "chunk_index": 1,
-            "score": 0.6852,
-            "snippet": "Sparse Retrieval and Lexical Matching  Sparse retrieval algorithms like BM25 leverage term frequencies and inverse document frequencies..."
-        }
-    ],
-    "model_used": "llama3.2:1b",
-    "latency_ms": 3.68,
-    "grounded": true,
-    "fallback_used": false
-}
+
+### 5.2 Hybrid Retrieval with Cross-Encoder Reranking
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What are the advantages and weaknesses of dense vs BM25 sparse retrieval?",
+    "retrieval_strategy": "hybrid_rerank",
+    "top_k": 2,
+    "rerank": true
+  }'
+```
+
+### 5.3 Scoped Metadata Filtering
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What is described on page 2 regarding Qdrant?",
+    "retrieval_strategy": "baseline",
+    "filters": {
+      "filename": "rag_architectures.pdf",
+      "page_number": 2
+    },
+    "top_k": 2
+  }'
 ```
 
 ---
@@ -288,7 +194,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/chat \
 ## 6. Project Roadmap
 
 - [x] **Phase 1**: Ingestion (PDF, DOCX, TXT), Recursive Chunking, Metadata Preservation, Sentence Transformers, Persistent Qdrant, Similarity Retrieval, Ollama Grounded Generation, Source Citations, FastAPI Services, Automated Tests.
-- [ ] **Phase 2**: Advanced Query Transformation & Retrieval (Multi-Query, HyDE, Query Decomposition, RAG Fusion, RRF, Hybrid Dense + BM25 Sparse Search, Cross-Encoder Reranking).
+- [x] **Phase 2**: Advanced Query Transformation & Retrieval (Multi-Query, HyDE, Query Decomposition, RAG Fusion, RRF, Hybrid Dense + BM25 Sparse Search, Metadata Filtering, Cross-Encoder Reranking, Quantitative Benchmarking).
 - [ ] **Phase 3**: Intelligent Multi-Path Query Routing (Semantic Routing, SQL Structured Database Routing, Safeguarded Query Execution).
 - [ ] **Phase 4**: Adaptive & Corrective RAG with LangGraph (Document Relevance Grading, Query Rewriting, Hallucination Checking, Self-Correction Loops).
 - [ ] **Phase 5**: Kaggle GPU Model Training & Fine-Tuning (Sentence Transformers Contrastive Learning / MultipleNegativesRankingLoss, Cross-Encoder Fine-Tuning, MRR / NDCG Evaluation).

@@ -1,0 +1,93 @@
+{
+  "Baseline (Dense)": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "precision@1": 1.0,
+    "precision@3": 0.9,
+    "precision@5": 0.72,
+    "mrr": 1.0,
+    "ndcg@3": 0.9765,
+    "ndcg@5": 0.9947,
+    "latency_ms": 4.08,
+    "candidate_size": 5.0
+  },
+  "Multi-Query": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "precision@1": 1.0,
+    "precision@3": 0.9,
+    "precision@5": 0.72,
+    "mrr": 1.0,
+    "ndcg@3": 0.9765,
+    "ndcg@5": 0.9947,
+    "latency_ms": 17.29,
+    "candidate_size": 5.0
+  },
+  "HyDE": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "precision@1": 1.0,
+    "precision@3": 0.9,
+    "precision@5": 0.7,
+    "mrr": 1.0,
+    "ndcg@3": 1.0,
+    "ndcg@5": 1.0,
+    "latency_ms": 8.7,
+    "candidate_size": 5.0
+  },
+  "Query Decomposition": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "precision@1": 1.0,
+    "precision@3": 0.9,
+    "precision@5": 0.72,
+    "mrr": 1.0,
+    "ndcg@3": 0.9765,
+    "ndcg@5": 0.9947,
+    "latency_ms": 7.34,
+    "candidate_size": 5.0
+  },
+  "RAG Fusion (RRF)": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "precision@1": 1.0,
+    "precision@3": 0.8,
+    "precision@5": 0.68,
+    "mrr": 1.0,
+    "ndcg@3": 0.9296,
+    "ndcg@5": 0.9879,
+    "latency_ms": 3.84,
+    "candidate_size": 5.0
+  },
+  "Hybrid (Dense+BM25)": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "precision@1": 1.0,
+    "precision@3": 0.8333,
+    "precision@5": 0.7,
+    "mrr": 1.0,
+    "ndcg@3": 0.9296,
+    "ndcg@5": 0.9841,
+    "latency_ms": 3.98,
+    "candidate_size": 5.0
+  },
+  "Hybrid + Cross-Encoder": {
+    "recall@1": 1.0,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "precision@1": 1.0,
+    "precision@3": 0.9,
+    "precision@5": 0.74,
+    "mrr": 1.0,
+    "ndcg@3": 0.9765,
+    "ndcg@5": 0.9947,
+    "latency_ms": 50.65,
+    "candidate_size": 10.0
+  }
+}

@@ -44,6 +44,18 @@ class Settings(BaseSettings):
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 100
 
+    # Phase 2: Advanced Retrieval Configuration
+    DEFAULT_RETRIEVAL_STRATEGY: str = "baseline"
+    RRF_K: int = 60
+    MULTI_QUERY_COUNT: int = 3
+    DECOMPOSITION_MAX_SUBQUERIES: int = 3
+    HYBRID_DENSE_WEIGHT: float = 0.5
+    HYBRID_SPARSE_WEIGHT: float = 0.5
+    RERANKER_MODEL_NAME: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    RERANKER_DEVICE: str = "cpu"
+    RERANK_TOP_N: int = 10
+    ENABLE_CROSS_ENCODER: bool = True
+
     # Ollama LLM Configuration
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3.2:1b"

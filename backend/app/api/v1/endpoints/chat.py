@@ -1,11 +1,11 @@
 """Chat and retrieval-augmented question answering endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from backend.app.api.deps import get_grounded_generator, get_retriever
+from backend.app.api.deps import get_grounded_generator, get_retrieval_orchestrator
 from backend.app.core.logging import get_logger
 from backend.app.generation.grounded_generator import GroundedAnswerGenerator
-from backend.app.retrieval.similarity_retriever import SimilarityRetriever
-from backend.app.schemas.chat import ChatRequest, ChatResponse
+from backend.app.retrieval.orchestrator import RetrievalOrchestrator
+from backend.app.schemas.chat import ChatRequest, ChatResponse, RetrievalStrategy
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -16,11 +16,14 @@ router = APIRouter()
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
     summary="Ask a question against indexed documents",
-    description="Performs semantic retrieval against Qdrant and generates a grounded response with source citations.",
+    description=(
+        "Executes multi-strategy retrieval (baseline, multi_query, hyde, decomposition, fusion, "
+        "hybrid, hybrid_rerank, rerank) and generates a strictly grounded answer with citations."
+    ),
 )
 async def chat(
     request: ChatRequest,
-    retriever: SimilarityRetriever = Depends(get_retriever),
+    orchestrator: RetrievalOrchestrator = Depends(get_retrieval_orchestrator),
     generator: GroundedAnswerGenerator = Depends(get_grounded_generator),
 ) -> ChatResponse:
     query = request.query.strip()
@@ -30,19 +33,25 @@ async def chat(
             detail="Query string cannot be empty.",
         )
 
+    strategy = request.retrieval_strategy or RetrievalStrategy.BASELINE
+
     try:
-        # 1. Retrieve top-k relevant chunks
-        retrieved_chunks = retriever.retrieve(
+        # 1. Execute multi-strategy retrieval through orchestrator
+        retrieved_chunks, retrieval_meta = orchestrator.retrieve(
             query=query,
+            strategy=strategy,
             top_k=request.top_k,
             score_threshold=request.score_threshold,
+            rerank=request.rerank or False,
             doc_id_filter=request.doc_id_filter,
+            filters=request.filters,
         )
 
-        # 2. Generate grounded response with citations
+        # 2. Generate grounded response with citations & retrieval metadata
         response = generator.generate_grounded_answer(
             query=query,
             retrieved_chunks=retrieved_chunks,
+            retrieval_metadata=retrieval_meta,
         )
         return response
     except Exception as e:

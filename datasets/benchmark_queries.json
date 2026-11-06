@@ -1,0 +1,72 @@
+[
+  {
+    "id": "q1",
+    "query": "How does RAG balance parametric and non-parametric knowledge?",
+    "target_doc": "rag_architectures.pdf",
+    "target_page": 1,
+    "keywords": ["parametric", "non-parametric", "dynamic document context"]
+  },
+  {
+    "id": "q2",
+    "query": "What is on page 2 regarding Qdrant vector indexing and cosine distance?",
+    "target_doc": "rag_architectures.pdf",
+    "target_page": 2,
+    "keywords": ["Page 2 explores vector indexing in Qdrant", "cosine distance"]
+  },
+  {
+    "id": "q3",
+    "query": "What are the trade-offs between BM25 sparse retrieval and dense embeddings?",
+    "target_doc": "retrieval_strategies.docx",
+    "target_page": 1,
+    "keywords": ["BM25", "dense retrieval", "exact keyword mismatch", "vocabulary gap"]
+  },
+  {
+    "id": "q4",
+    "query": "What is the primary weakness of BM25 sparse matching according to the table?",
+    "target_doc": "retrieval_strategies.docx",
+    "target_page": 1,
+    "keywords": ["Vocabulary gap", "BM25 Sparse", "weakness"]
+  },
+  {
+    "id": "q5",
+    "query": "How do autonomous AI agents perceive their environment and take actions?",
+    "target_doc": "ai_agents_overview.txt",
+    "target_page": 1,
+    "keywords": ["sensors", "tools", "actions", "perceive their environment"]
+  },
+  {
+    "id": "q6",
+    "query": "How does short-term memory differ from long-term memory in cognitive agents?",
+    "target_doc": "ai_agents_overview.txt",
+    "target_page": 1,
+    "keywords": ["short-term memory", "long-term memory", "episodic and semantic memory"]
+  },
+  {
+    "id": "q7",
+    "query": "What schemas and validation are used for agent tool integration?",
+    "target_doc": "ai_agents_overview.txt",
+    "target_page": 1,
+    "keywords": ["structured JSON schemas", "function calling", "parameter validation"]
+  },
+  {
+    "id": "q8",
+    "query": "Why might dense embeddings suffer from vocabulary mismatch on rare terms?",
+    "target_doc": "retrieval_strategies.docx",
+    "target_page": 1,
+    "keywords": ["vocabulary mismatch", "rare terms", "technical identifiers"]
+  },
+  {
+    "id": "q9",
+    "query": "What metric measures relevance between query and document embeddings in vector spaces?",
+    "target_doc": "retrieval_strategies.docx",
+    "target_page": 1,
+    "keywords": ["Cosine similarity", "dot product", "continuous semantic vector spaces"]
+  },
+  {
+    "id": "q10",
+    "query": "How does retrieval-augmented generation serve as long-term memory for production AI agents?",
+    "target_doc": "ai_agents_overview.txt",
+    "target_page": 1,
+    "keywords": ["episodic and semantic memory backbone", "vector databases", "long-term memory"]
+  }
+]

@@ -1,7 +1,7 @@
 """Grounded response generator orchestrating context formatting, LLM inference, and citation assembly."""
 
 import time
-from typing import List, Optional
+from typing import Any, List, Optional
 from backend.app.core.logging import get_logger
 from backend.app.generation.ollama_client import OllamaClient
 from backend.app.generation.prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE, format_context_blocks
@@ -20,6 +20,7 @@ class GroundedAnswerGenerator:
         self,
         query: str,
         retrieved_chunks: List[RetrievedChunk],
+        retrieval_metadata: Optional[Any] = None,
     ) -> ChatResponse:
         """Format context, invoke generation, build structured citations, and measure latency."""
         start_time = time.perf_counter()
@@ -35,6 +36,7 @@ class GroundedAnswerGenerator:
                 latency_ms=round(elapsed_ms, 2),
                 grounded=False,
                 fallback_used=False,
+                retrieval_metadata=retrieval_metadata,
             )
 
         # 1. Build prompt context
@@ -85,4 +87,5 @@ class GroundedAnswerGenerator:
             latency_ms=round(elapsed_ms, 2),
             grounded=True,
             fallback_used=is_fallback,
+            retrieval_metadata=retrieval_metadata,
         )

@@ -9,8 +9,11 @@ from backend.app.schemas.document import (
     DocumentDeleteResponse,
 )
 from backend.app.schemas.chat import (
+    RetrievalStrategy,
+    MetadataFilter,
     Citation,
     RetrievedChunk,
+    RetrievalMetadata,
     ChatRequest,
     ChatResponse,
 )
@@ -26,8 +29,11 @@ __all__ = [
     "DocumentDetail",
     "DocumentListResponse",
     "DocumentDeleteResponse",
+    "RetrievalStrategy",
+    "MetadataFilter",
     "Citation",
     "RetrievedChunk",
+    "RetrievalMetadata",
     "ChatRequest",
     "ChatResponse",
     "ComponentStatus",

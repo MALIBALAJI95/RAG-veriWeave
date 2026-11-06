@@ -99,19 +99,44 @@ class QdrantStorageManager:
         top_k: int = 4,
         score_threshold: Optional[float] = None,
         doc_id_filter: Optional[str] = None,
+        filename_filter: Optional[str] = None,
+        page_number_filter: Optional[int] = None,
+        custom_filter: Optional[Dict[str, Any]] = None,
     ) -> List[RetrievedChunk]:
-        """Perform vector similarity search against the collection."""
+        """Perform vector similarity search against the collection with rich metadata filtering."""
         try:
-            query_filter = None
+            must_conditions = []
             if doc_id_filter:
-                query_filter = rest_models.Filter(
-                    must=[
-                        rest_models.FieldCondition(
-                            key="doc_id",
-                            match=rest_models.MatchValue(value=doc_id_filter),
-                        )
-                    ]
+                must_conditions.append(
+                    rest_models.FieldCondition(
+                        key="doc_id",
+                        match=rest_models.MatchValue(value=doc_id_filter),
+                    )
                 )
+            if filename_filter:
+                must_conditions.append(
+                    rest_models.FieldCondition(
+                        key="filename",
+                        match=rest_models.MatchValue(value=filename_filter),
+                    )
+                )
+            if page_number_filter is not None:
+                must_conditions.append(
+                    rest_models.FieldCondition(
+                        key="page_number",
+                        match=rest_models.MatchValue(value=page_number_filter),
+                    )
+                )
+            if custom_filter:
+                for k, v in custom_filter.items():
+                    must_conditions.append(
+                        rest_models.FieldCondition(
+                            key=f"metadata.{k}",
+                            match=rest_models.MatchValue(value=v),
+                        )
+                    )
+
+            query_filter = rest_models.Filter(must=must_conditions) if must_conditions else None
 
             # Support both qdrant-client 1.20+ (query_points) and 1.8-1.19 (search)
             if hasattr(self.client, "query_points"):
@@ -283,6 +308,43 @@ class QdrantStorageManager:
         except Exception as e:
             logger.error(f"Failed to get chunks for doc_id '{doc_id}': {e}")
             raise VectorStorageError(f"Failed to get document chunks: {str(e)}")
+
+    def get_all_chunks(self, collection_name: str) -> List[DocumentChunk]:
+        """Fetch all indexed document chunks across the entire collection for lexical indexing."""
+        try:
+            chunks: List[DocumentChunk] = []
+            offset = None
+            while True:
+                records, next_offset = self.client.scroll(
+                    collection_name=collection_name,
+                    limit=250,
+                    offset=offset,
+                    with_payload=True,
+                    with_vectors=False,
+                )
+                for rec in records:
+                    p = rec.payload or {}
+                    chunks.append(
+                        DocumentChunk(
+                            chunk_id=p.get("chunk_id", str(rec.id)),
+                            doc_id=p.get("doc_id", ""),
+                            filename=p.get("filename", ""),
+                            page_number=p.get("page_number", 1),
+                            chunk_index=p.get("chunk_index", 0),
+                            text=p.get("text", ""),
+                            char_start=p.get("char_start", 0),
+                            char_end=p.get("char_end", 0),
+                            token_count_estimate=p.get("token_count_estimate", 0),
+                            metadata=p.get("metadata", {}),
+                        )
+                    )
+                if next_offset is None:
+                    break
+                offset = next_offset
+            return chunks
+        except Exception as e:
+            logger.error(f"Failed to fetch all chunks from '{collection_name}': {e}")
+            raise VectorStorageError(f"Failed to scroll chunks: {str(e)}")
 
     def get_collection_info(self, collection_name: str) -> Dict[str, Any]:
         """Get collection metrics (total vectors, indexed points, status)."""

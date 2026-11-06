@@ -6,18 +6,34 @@ from typing import Generator, List
 import pytest
 from fastapi.testclient import TestClient
 from backend.app.api.deps import (
+    get_decomposition_retriever,
     get_embedding_model,
+    get_hybrid_retriever,
+    get_hyde_retriever,
     get_ingestion_pipeline,
+    get_multi_query_retriever,
+    get_ollama_client,
+    get_reranker,
+    get_retrieval_orchestrator,
     get_retriever,
+    get_rrf_engine,
     get_settings,
+    get_sparse_retriever,
     get_storage_manager,
 )
 from backend.app.core.config import Settings
 from backend.app.embeddings.base import BaseEmbeddings
-from backend.app.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from backend.app.generation.ollama_client import OllamaClient
 from backend.app.ingestion.pipeline import IngestionPipeline
 from backend.app.main import app
+from backend.app.retrieval.bm25 import BM25Retriever
+from backend.app.retrieval.decomposition import QueryDecompositionRetriever
+from backend.app.retrieval.fusion import RRFFusionEngine
+from backend.app.retrieval.hybrid import HybridRetriever
+from backend.app.retrieval.hyde import HyDERetriever
+from backend.app.retrieval.multi_query import MultiQueryRetriever
+from backend.app.retrieval.orchestrator import RetrievalOrchestrator
+from backend.app.retrieval.reranker import CrossEncoderReranker
 from backend.app.retrieval.similarity_retriever import SimilarityRetriever
 from backend.app.storage.qdrant_client import QdrantStorageManager
 
@@ -125,17 +141,73 @@ def client(
         collection_name="test_collection",
     )
 
-    retriever = SimilarityRetriever(
+    baseline_retriever = SimilarityRetriever(
         storage_manager=test_storage,
         embedding_model=mock_embeddings,
         collection_name="test_collection",
+    )
+
+    sparse_retriever = BM25Retriever(
+        storage_manager=test_storage,
+        collection_name="test_collection",
+    )
+
+    rrf_engine = RRFFusionEngine(k=60)
+
+    ollama = OllamaClient(
+        base_url="http://localhost:99999",
+        model="llama3.2:1b",
+        enable_fallback=True,
+    )
+
+    hybrid_retriever = HybridRetriever(
+        dense_retriever=baseline_retriever,
+        sparse_retriever=sparse_retriever,
+        rrf_k=60,
+    )
+
+    multi_query_retriever = MultiQueryRetriever(
+        base_retriever=baseline_retriever,
+        ollama_client=ollama,
+        num_queries=3,
+        rrf_k=60,
+    )
+
+    hyde_retriever = HyDERetriever(
+        storage_manager=test_storage,
+        embedding_model=mock_embeddings,
+        ollama_client=ollama,
+        collection_name="test_collection",
+    )
+
+    decomp_retriever = QueryDecompositionRetriever(
+        base_retriever=baseline_retriever,
+        ollama_client=ollama,
+        max_subqueries=3,
+        rrf_k=60,
+    )
+
+    # Use reranker with enabled=False or mocked for fast tests
+    reranker = CrossEncoderReranker(enabled=False)
+
+    orchestrator = RetrievalOrchestrator(
+        baseline_retriever=baseline_retriever,
+        multi_query_retriever=multi_query_retriever,
+        hyde_retriever=hyde_retriever,
+        decomposition_retriever=decomp_retriever,
+        sparse_retriever=sparse_retriever,
+        hybrid_retriever=hybrid_retriever,
+        reranker=reranker,
+        fusion_engine=rrf_engine,
     )
 
     app.dependency_overrides[get_settings] = lambda: test_settings
     app.dependency_overrides[get_storage_manager] = lambda: test_storage
     app.dependency_overrides[get_embedding_model] = lambda: mock_embeddings
     app.dependency_overrides[get_ingestion_pipeline] = lambda: pipeline
-    app.dependency_overrides[get_retriever] = lambda: retriever
+    app.dependency_overrides[get_retriever] = lambda: baseline_retriever
+    app.dependency_overrides[get_sparse_retriever] = lambda: sparse_retriever
+    app.dependency_overrides[get_retrieval_orchestrator] = lambda: orchestrator
 
     with TestClient(app) as test_client:
         yield test_client
