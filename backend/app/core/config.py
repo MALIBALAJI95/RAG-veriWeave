@@ -76,6 +76,14 @@ class Settings(BaseSettings):
     # Fallback Generator: active when Ollama is unreachable, returns structured grounded response
     ENABLE_FALLBACK_GENERATOR: bool = True
 
+    # Phase 4: Adaptive & Corrective RAG with LangGraph
+    ENABLE_ADAPTIVE_RAG: bool = False
+    MAX_QUERY_REWRITES: int = 2
+    MAX_ANSWER_CORRECTIONS: int = 2
+    RELEVANCE_GRADE_THRESHOLD: float = 0.5
+    MIN_RELEVANT_EVIDENCE_COUNT: int = 1
+    ENABLE_HALLUCINATION_CHECK: bool = True
+
     # Logging
     LOG_LEVEL: str = "INFO"
 

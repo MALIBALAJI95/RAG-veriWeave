@@ -110,6 +110,32 @@ Every document chunk extracted by `RecursiveCharacterChunker` adheres to a stric
 - **`WebSearchProvider`**: Provider-agnostic external search abstraction (`MockWebSearchProvider`, `DuckDuckGoSearchProvider`).
 - **`RoutingOrchestrator`**: Coordinates multi-path dispatch and multi-source synthesis, producing unified `EvidenceItem` streams and cross-source citations.
 
+### 2.7 Adaptive & Corrective RAG with LangGraph (Phase 4)
+- **`AdaptiveRAGWorkflow`**: A cyclic, stateful LangGraph state machine (`StateGraph[AdaptiveRAGState]`) that replaces rigid single-pass retrieval with an adaptive, self-evaluating workflow.
+- **`EvidenceRelevanceGrader`**: Evaluates retrieved evidence items individually against the active query using local Ollama prompt grading with a deterministic Jaccard and retrieval score fallback. Filters irrelevant noise while preserving full metadata provenance.
+- **`AdaptiveQueryRewriter`**: Analyzes retrieval insufficiency, strips conversational noise, and progressively reformulates queries while strictly preserving user intent. Capped by `MAX_QUERY_REWRITES` (default: 2) to eliminate infinite loops.
+- **Corrective Retrieval**: Reuses the central `RoutingOrchestrator` across vector, SQL, and web routes, merging and deduplicating cross-attempt evidence.
+- **`GroundingValidator`**: Audits generated answers claim-by-claim and validates citation references against real evidence items. If hallucinations or unsupported claims are detected, routes to `revise_answer` (capped by `MAX_ANSWER_CORRECTIONS`). Truthfully reports context insufficiency on unanswerable/adversarial queries.
+
+```mermaid
+flowchart TD
+    Route[route_query] --> Retrieve[retrieve_evidence]
+    Retrieve --> Grade[grade_evidence]
+    Grade --> CheckSufficiency{Sufficient Evidence?}
+    CheckSufficiency -->|Yes| Generate[generate_answer]
+    CheckSufficiency -->|No & attempts < max| Rewrite[rewrite_query]
+    CheckSufficiency -->|No & attempts >= max| Insufficient[generate_answer\n(declare insufficient)]
+    Rewrite --> Retrieve
+    Generate --> Validate[validate_grounding]
+    Insufficient --> Validate
+    Validate --> CheckGrounding{Is Grounded?}
+    CheckGrounding -->|Yes| Finalize[finalize_response]
+    CheckGrounding -->|No & revisions < max| Revise[revise_answer]
+    CheckGrounding -->|No & revisions >= max| Finalize
+    Revise --> Validate
+    Finalize --> Done([END])
+```
+
 ---
 
 ## 3. Resource & Memory Budget (8 GB Apple Silicon Mac)

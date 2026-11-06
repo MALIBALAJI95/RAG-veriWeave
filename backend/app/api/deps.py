@@ -24,6 +24,10 @@ from backend.app.routing.handlers.web_handler import WebRouteHandler
 from backend.app.routing.orchestrator import RoutingOrchestrator
 from backend.app.storage.qdrant_client import QdrantStorageManager
 from backend.app.web_search.factory import get_web_search_provider
+from backend.app.adaptive.grounding_validator import GroundingValidator
+from backend.app.adaptive.query_rewriter import AdaptiveQueryRewriter
+from backend.app.adaptive.relevance_grader import EvidenceRelevanceGrader
+from backend.app.adaptive.workflow import AdaptiveRAGWorkflow
 
 
 # Singleton storage manager
@@ -247,3 +251,48 @@ def get_routing_orchestrator() -> RoutingOrchestrator:
 def get_grounded_generator() -> GroundedAnswerGenerator:
     client = get_ollama_client()
     return GroundedAnswerGenerator(ollama_client=client)
+
+
+# Singleton relevance grader
+@lru_cache()
+def get_relevance_grader() -> EvidenceRelevanceGrader:
+    settings = get_settings()
+    client = get_ollama_client()
+    return EvidenceRelevanceGrader(
+        ollama_client=client,
+        default_threshold=settings.RELEVANCE_GRADE_THRESHOLD,
+    )
+
+
+# Singleton adaptive query rewriter
+@lru_cache()
+def get_query_rewriter() -> AdaptiveQueryRewriter:
+    settings = get_settings()
+    client = get_ollama_client()
+    return AdaptiveQueryRewriter(
+        ollama_client=client,
+        max_rewrites=settings.MAX_QUERY_REWRITES,
+    )
+
+
+# Singleton grounding and hallucination validator
+@lru_cache()
+def get_grounding_validator() -> GroundingValidator:
+    client = get_ollama_client()
+    return GroundingValidator(ollama_client=client)
+
+
+# Singleton LangGraph Adaptive & Corrective RAG Workflow
+@lru_cache()
+def get_adaptive_workflow() -> AdaptiveRAGWorkflow:
+    settings = get_settings()
+    return AdaptiveRAGWorkflow(
+        routing_orchestrator=get_routing_orchestrator(),
+        relevance_grader=get_relevance_grader(),
+        query_rewriter=get_query_rewriter(),
+        grounding_validator=get_grounding_validator(),
+        generator=get_grounded_generator(),
+        max_rewrites=settings.MAX_QUERY_REWRITES,
+        max_corrections=settings.MAX_ANSWER_CORRECTIONS,
+        min_relevant_evidence=settings.MIN_RELEVANT_EVIDENCE_COUNT,
+    )

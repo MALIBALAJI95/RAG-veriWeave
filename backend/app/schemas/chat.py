@@ -88,6 +88,10 @@ class ChatRequest(BaseModel):
         default=None,
         description="Optional document ID filter (backward compatibility)",
     )
+    adaptive: Optional[bool] = Field(
+        default=False,
+        description="Whether to execute adaptive self-correcting RAG workflow via LangGraph",
+    )
 
 
 class ChatResponse(BaseModel):
@@ -111,4 +115,8 @@ class ChatResponse(BaseModel):
     evidence: List[EvidenceItem] = Field(
         default_factory=list,
         description="Unified cross-source evidence items (vector, SQL, web)",
+    )
+    adaptive_metadata: Optional[Any] = Field(
+        default=None,
+        description="Diagnostic metadata detailing LangGraph adaptive grading, rewrites, and validation",
     )

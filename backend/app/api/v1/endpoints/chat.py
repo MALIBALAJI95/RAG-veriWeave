@@ -1,7 +1,12 @@
-"""Chat and intelligent multi-path retrieval-augmented question answering endpoints."""
+"""Chat, intelligent multi-path routing, and adaptive corrective RAG endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from backend.app.api.deps import get_grounded_generator, get_routing_orchestrator
+from backend.app.adaptive.workflow import AdaptiveRAGWorkflow
+from backend.app.api.deps import (
+    get_adaptive_workflow,
+    get_grounded_generator,
+    get_routing_orchestrator,
+)
 from backend.app.core.logging import get_logger
 from backend.app.generation.grounded_generator import GroundedAnswerGenerator
 from backend.app.routing.orchestrator import RoutingOrchestrator
@@ -16,17 +21,18 @@ router = APIRouter()
     "",
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
-    summary="Ask a question with intelligent multi-path routing",
+    summary="Ask a question with intelligent multi-path routing or adaptive corrective RAG",
     description=(
-        "Classifies query intent and executes multi-path retrieval across vector document storage "
-        "(multi-query, HyDE, decomposition, hybrid, rerank), structured SQL metadata catalog, "
-        "external web search, or multi-source synthesis, generating a grounded answer with citations."
+        "Executes question answering using either standard multi-path routing (vector, SQL, web, multi-source) "
+        "or an adaptive self-correcting LangGraph workflow (`adaptive=true`) featuring evidence grading, "
+        "query rewriting, corrective retrieval, and hallucination validation."
     ),
 )
 async def chat(
     request: ChatRequest,
     orchestrator: RoutingOrchestrator = Depends(get_routing_orchestrator),
     generator: GroundedAnswerGenerator = Depends(get_grounded_generator),
+    adaptive_workflow: AdaptiveRAGWorkflow = Depends(get_adaptive_workflow),
 ) -> ChatResponse:
     query = request.query.strip()
     if not query:
@@ -39,7 +45,22 @@ async def chat(
     strategy = request.retrieval_strategy or RetrievalStrategy.BASELINE
 
     try:
-        # 1. Execute intelligent multi-path routing and retrieval
+        # 1. Execute Adaptive & Corrective LangGraph workflow if requested
+        if request.adaptive:
+            logger.info(f"Executing LangGraph Adaptive & Corrective RAG workflow for query: '{query[:40]}...'")
+            response = adaptive_workflow.run(
+                query=query,
+                routing_mode=routing_mode,
+                selected_strategy=strategy,
+                top_k=request.top_k,
+                score_threshold=request.score_threshold,
+                rerank=request.rerank or False,
+                filters=request.filters,
+                doc_id_filter=request.doc_id_filter,
+            )
+            return response
+
+        # 2. Standard Multi-Path Routing & Retrieval (Phase 3 flow)
         evidence, decision, exec_meta = orchestrator.route_and_retrieve(
             query=query,
             routing_mode=routing_mode,
@@ -53,7 +74,7 @@ async def chat(
 
         retrieval_meta = orchestrator.vector_handler.last_metadata
 
-        # 2. Generate grounded response with multi-source citations
+        # 3. Generate grounded response with multi-source citations
         response = generator.generate_grounded_answer(
             query=query,
             retrieved_chunks=[],
@@ -61,7 +82,7 @@ async def chat(
             evidence_items=evidence,
         )
 
-        # 3. Attach routing decision and cross-source evidence
+        # 4. Attach routing decision and cross-source evidence
         response.routing_decision = decision
         response.evidence = evidence
 

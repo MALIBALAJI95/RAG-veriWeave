@@ -23,6 +23,13 @@ from backend.app.schemas.health import (
 )
 from backend.app.routing.evidence import EvidenceItem
 from backend.app.routing.schemas import RouteCategory, RoutingDecision, RoutingMode
+from backend.app.adaptive.schemas import (
+    AdaptiveRAGState,
+    AdaptiveWorkflowMetadata,
+    EvidenceRelevanceGrade,
+    GroundingValidationResult,
+    QueryRewriteResult,
+)
 
 __all__ = [
     "DocumentMetadata",
@@ -36,6 +43,11 @@ __all__ = [
     "RouteCategory",
     "RoutingDecision",
     "EvidenceItem",
+    "AdaptiveWorkflowMetadata",
+    "AdaptiveRAGState",
+    "EvidenceRelevanceGrade",
+    "GroundingValidationResult",
+    "QueryRewriteResult",
     "MetadataFilter",
     "Citation",
     "RetrievedChunk",

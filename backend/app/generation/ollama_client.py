@@ -115,10 +115,13 @@ class OllamaClient:
 
         # Present the top relevant chunk findings with exact citations
         for idx, chunk in enumerate(chunks[:3], 1):
-            excerpt = chunk.text.strip().replace("\n", " ")
+            raw_text = getattr(chunk, "content_excerpt", getattr(chunk, "text", str(chunk)))
+            excerpt = raw_text.strip().replace("\n", " ")
             if len(excerpt) > 280:
                 excerpt = excerpt[:280] + "..."
-            lines.append(f"- {excerpt} [Doc: {chunk.filename}, Page: {chunk.page_number}]")
+            fn = getattr(chunk, "filename", getattr(chunk, "title", "Source")) or "Source"
+            pg = getattr(chunk, "page_number", 1) or 1
+            lines.append(f"- {excerpt} [Doc: {fn}, Page: {pg}]")
 
         lines.append("")
         lines.append(

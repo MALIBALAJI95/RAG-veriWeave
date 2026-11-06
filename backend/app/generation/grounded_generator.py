@@ -57,7 +57,7 @@ class GroundedAnswerGenerator:
         raw_answer, model_used, is_fallback = self.client.generate(
             prompt=user_prompt,
             system_prompt=SYSTEM_PROMPT,
-            retrieved_chunks=retrieved_chunks if all(isinstance(x, RetrievedChunk) for x in retrieved_chunks) else None,
+            retrieved_chunks=context_items,
         )
 
         # 3. Build structured citations accurately from items
