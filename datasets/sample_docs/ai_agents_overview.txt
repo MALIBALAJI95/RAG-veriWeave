@@ -1,0 +1,10 @@
+# Overview of Autonomous AI Agents
+
+Section 1: Agent Foundations
+Autonomous agents are computational systems that perceive their environment through sensors or tools and take actions to achieve specified goals. Unlike static language models that only respond to immediate prompts, modern LLM agents maintain internal state, form plans, reflect on past tool execution results, and iteratively solve complex problems.
+
+Section 2: Memory Systems
+Cognitive agent architectures distinguish between short-term memory (the immediate conversational context window) and long-term memory (external vector databases, key-value stores, or knowledge graphs). Retrieval-augmented generation serves as the episodic and semantic memory backbone for production AI agents.
+
+Section 3: Tool Integration
+Agents interface with tools using structured JSON schemas or function calling interfaces. Proper error handling, parameter validation, and rate limiting are critical to prevent catastrophic execution failures.

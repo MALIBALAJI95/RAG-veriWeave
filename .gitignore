@@ -1,0 +1,80 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Secrets & Environment variables
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+*.crt
+
+# Local Data & Persistent Vector Storage
+data/qdrant_storage/*
+!data/qdrant_storage/.gitkeep
+data/documents/*
+!data/documents/.gitkeep
+
+# Checkpoints and exported models
+exported_models/*
+!exported_models/.gitkeep
+training/checkpoints/
+*.pt
+*.bin
+*.onnx
+*.safetensors
+
+# Experiments and Logs
+experiments/runs/*
+!experiments/runs/.gitkeep
+*.log
+logs/
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# OS and IDE files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
