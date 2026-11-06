@@ -1,0 +1,177 @@
+[
+  {
+    "query_id": "route_vec_01",
+    "query_text": "What is the primary difference between dense and sparse retrieval in RAG?",
+    "expected_route": "vector_document",
+    "expected_sources": ["vector_document"],
+    "category": "conceptual_definition"
+  },
+  {
+    "query_id": "route_vec_02",
+    "query_text": "How does Reciprocal Rank Fusion combine rankings from different search algorithms?",
+    "expected_route": "vector_document",
+    "expected_sources": ["vector_document"],
+    "category": "algorithmic_explanation"
+  },
+  {
+    "query_id": "route_vec_03",
+    "query_text": "Explain the role of sensors, actuators, and environment perception in autonomous agents.",
+    "expected_route": "vector_document",
+    "expected_sources": ["vector_document"],
+    "category": "domain_knowledge"
+  },
+  {
+    "query_id": "route_vec_04",
+    "query_text": "Summarize the key advantages of cross-encoder reranking over bi-encoder similarity.",
+    "expected_route": "vector_document",
+    "expected_sources": ["vector_document"],
+    "category": "summarization"
+  },
+  {
+    "query_id": "route_vec_05",
+    "query_text": "What are the chunking strategies recommended for maintaining context boundaries in PDFs?",
+    "expected_route": "vector_document",
+    "expected_sources": ["vector_document"],
+    "category": "technical_details"
+  },
+  {
+    "query_id": "route_vec_06",
+    "query_text": "Describe the hypothetical document generation process in HyDE.",
+    "expected_route": "vector_document",
+    "expected_sources": ["vector_document"],
+    "category": "pipeline_concept"
+  },
+  {
+    "query_id": "route_vec_07",
+    "query_text": "What is the role of working memory versus long-term memory in AI agent architectures?",
+    "expected_route": "vector_document",
+    "expected_sources": ["vector_document"],
+    "category": "domain_knowledge"
+  },
+  {
+    "query_id": "route_sql_01",
+    "query_text": "How many documents are uploaded in the system?",
+    "expected_route": "structured_sql",
+    "expected_sources": ["structured_sql"],
+    "category": "catalog_count"
+  },
+  {
+    "query_id": "route_sql_02",
+    "query_text": "How many PDF files are indexed in the catalog database?",
+    "expected_route": "structured_sql",
+    "expected_sources": ["structured_sql"],
+    "category": "type_filtered_count"
+  },
+  {
+    "query_id": "route_sql_03",
+    "query_text": "List all uploaded files and their page counts",
+    "expected_route": "structured_sql",
+    "expected_sources": ["structured_sql"],
+    "category": "catalog_listing"
+  },
+  {
+    "query_id": "route_sql_04",
+    "query_text": "What is the total number of chunks indexed across all documents?",
+    "expected_route": "structured_sql",
+    "expected_sources": ["structured_sql"],
+    "category": "aggregation_sum"
+  },
+  {
+    "query_id": "route_sql_05",
+    "query_text": "What is the largest document by file size in the database?",
+    "expected_route": "structured_sql",
+    "expected_sources": ["structured_sql"],
+    "category": "order_by_extremum"
+  },
+  {
+    "query_id": "route_sql_06",
+    "query_text": "Show all documents uploaded with their indexing status",
+    "expected_route": "structured_sql",
+    "expected_sources": ["structured_sql"],
+    "category": "catalog_listing"
+  },
+  {
+    "query_id": "route_web_01",
+    "query_text": "What are the latest 2026 features released in LangChain and LangGraph?",
+    "expected_route": "web_search",
+    "expected_sources": ["web_search"],
+    "category": "recent_developments"
+  },
+  {
+    "query_id": "route_web_02",
+    "query_text": "What is the release date and breaking changes in Python 3.13?",
+    "expected_route": "web_search",
+    "expected_sources": ["web_search"],
+    "category": "external_software_news"
+  },
+  {
+    "query_id": "route_web_03",
+    "query_text": "Current industry benchmarks for Qdrant vector database in 2026",
+    "expected_route": "web_search",
+    "expected_sources": ["web_search"],
+    "category": "external_benchmarks"
+  },
+  {
+    "query_id": "route_web_04",
+    "query_text": "What is the latest news regarding Google Gemini 2.0 Flash models?",
+    "expected_route": "web_search",
+    "expected_sources": ["web_search"],
+    "category": "external_software_news"
+  },
+  {
+    "query_id": "route_web_05",
+    "query_text": "Recent research papers published on speculative decoding in 2025 and 2026",
+    "expected_route": "web_search",
+    "expected_sources": ["web_search"],
+    "category": "recent_research"
+  },
+  {
+    "query_id": "route_web_06",
+    "query_text": "What are today's top open-source reranker models on Hugging Face?",
+    "expected_route": "web_search",
+    "expected_sources": ["web_search"],
+    "category": "external_community"
+  },
+  {
+    "query_id": "route_multi_01",
+    "query_text": "Compare our internal document benchmarks with latest external web benchmarks",
+    "expected_route": "multi_source",
+    "expected_sources": ["vector_document", "web_search"],
+    "category": "comparative_cross_source"
+  },
+  {
+    "query_id": "route_multi_02",
+    "query_text": "Explain RAG architecture from our document and check how many total documents are in the database",
+    "expected_route": "multi_source",
+    "expected_sources": ["vector_document", "structured_sql"],
+    "category": "doc_content_plus_sql"
+  },
+  {
+    "query_id": "route_multi_03",
+    "query_text": "Contrast the agent architectures described in our uploaded files versus the latest online implementations",
+    "expected_route": "multi_source",
+    "expected_sources": ["vector_document", "web_search"],
+    "category": "comparative_cross_source"
+  },
+  {
+    "query_id": "route_multi_04",
+    "query_text": "Summarize our internal report findings and compare with today's industry standards",
+    "expected_route": "multi_source",
+    "expected_sources": ["vector_document", "web_search"],
+    "category": "comparative_cross_source"
+  },
+  {
+    "query_id": "route_multi_05",
+    "query_text": "What is the method in our uploaded paper and what is the file size in the database?",
+    "expected_route": "multi_source",
+    "expected_sources": ["vector_document", "structured_sql"],
+    "category": "doc_content_plus_sql"
+  },
+  {
+    "query_id": "route_multi_06",
+    "query_text": "In our document what is BM25 scoring and also find latest online research from 2026",
+    "expected_route": "multi_source",
+    "expected_sources": ["vector_document", "web_search"],
+    "category": "comparative_cross_source"
+  }
+]

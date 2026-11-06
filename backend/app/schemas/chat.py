@@ -3,18 +3,8 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
-
-
-class RetrievalStrategy(str, Enum):
-    """Supported retrieval strategies in VeriWeave."""
-    BASELINE = "baseline"               # Dense similarity search (Phase 1)
-    MULTI_QUERY = "multi_query"         # LLM-generated semantic query variants
-    HYDE = "hyde"                       # Hypothetical Document Embeddings
-    DECOMPOSITION = "decomposition"     # Sub-query decomposition for compound queries
-    FUSION = "fusion"                   # Multi-strategy Reciprocal Rank Fusion
-    HYBRID = "hybrid"                   # Dense (SentenceTransformers) + Sparse (BM25)
-    HYBRID_RERANK = "hybrid_rerank"     # Hybrid retrieval + Cross-Encoder reranking
-    RERANK = "rerank"                   # Baseline dense retrieval + Cross-Encoder reranking
+from backend.app.routing.schemas import RoutingDecision, RoutingMode
+from backend.app.schemas.strategy import RetrievalStrategy
 
 
 class MetadataFilter(BaseModel):
@@ -26,10 +16,10 @@ class MetadataFilter(BaseModel):
 
 
 class Citation(BaseModel):
-    """Grounding source citation referencing document and page."""
+    """Grounding source citation referencing document, database, or web origin."""
     citation_id: int = Field(description="Sequential citation number (1, 2, ...)")
-    doc_id: str = Field(description="Parent document UUID")
-    filename: str = Field(description="Filename of the referenced source")
+    doc_id: str = Field(description="Parent document UUID or source category")
+    filename: str = Field(description="Filename, SQL catalog identifier, or web source")
     page_number: int = Field(description="Page number (1-indexed)")
     chunk_index: int = Field(description="Index of the chunk in the document")
     score: float = Field(description="Relevance or similarity score (0.0 to 1.0)")
@@ -64,9 +54,16 @@ class RetrievalMetadata(BaseModel):
     retrieval_latency_ms: float = 0.0
 
 
+from backend.app.routing.evidence import EvidenceItem
+
+
 class ChatRequest(BaseModel):
     """User request to query the RAG system."""
     query: str = Field(min_length=1, max_length=2000, description="User's natural language question")
+    routing_mode: Optional[RoutingMode] = Field(
+        default=RoutingMode.AUTO,
+        description="Routing mode: auto, document_only, sql_only, web_only, multi_source",
+    )
     retrieval_strategy: Optional[RetrievalStrategy] = Field(
         default=RetrievalStrategy.BASELINE,
         description="Retrieval strategy: baseline, multi_query, hyde, decomposition, fusion, hybrid, hybrid_rerank, rerank",
@@ -86,7 +83,7 @@ class ChatRequest(BaseModel):
         default=None,
         description="Optional metadata filtering (doc_id, filename, page_number)",
     )
-    # Deprecated backward compatibility field from Phase 1
+    # Backward compatibility field from Phase 1
     doc_id_filter: Optional[str] = Field(
         default=None,
         description="Optional document ID filter (backward compatibility)",
@@ -103,7 +100,15 @@ class ChatResponse(BaseModel):
     latency_ms: float
     grounded: bool = True
     fallback_used: bool = False
+    routing_decision: Optional[RoutingDecision] = Field(
+        default=None,
+        description="Intelligent routing decision details (route, confidence, method, reasoning)",
+    )
     retrieval_metadata: Optional[RetrievalMetadata] = Field(
         default=None,
         description="Diagnostic metadata detailing queries generated, fusion, and reranking",
+    )
+    evidence: List[EvidenceItem] = Field(
+        default_factory=list,
+        description="Unified cross-source evidence items (vector, SQL, web)",
     )

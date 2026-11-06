@@ -32,6 +32,17 @@ class Settings(BaseSettings):
     DOCUMENTS_DIR: Path = Field(default_factory=lambda: Path("./data/documents"))
     QDRANT_STORAGE_PATH: Path = Field(default_factory=lambda: Path("./data/qdrant_storage"))
     QDRANT_COLLECTION_NAME: str = "veriweave_documents"
+    SQLITE_DB_PATH: Path = Field(default_factory=lambda: Path("./data/veriweave.db"))
+
+    # Phase 3: Intelligent Query Routing & Multi-Source Configuration
+    DEFAULT_ROUTING_MODE: str = "auto"
+    ROUTING_CONFIDENCE_THRESHOLD: float = 0.65
+    ENABLE_SQL_ROUTING: bool = True
+    SQL_MAX_ROWS: int = 50
+    SQL_EXECUTION_TIMEOUT_SECONDS: float = 5.0
+    ENABLE_WEB_SEARCH: bool = True
+    WEB_SEARCH_PROVIDER: str = "mock"
+    WEB_SEARCH_MAX_RESULTS: int = 3
 
     # Embeddings Configuration
     # sentence-transformers/all-MiniLM-L6-v2 is ultra-lightweight (80MB, 384-dim, fast on Apple Silicon M-series)

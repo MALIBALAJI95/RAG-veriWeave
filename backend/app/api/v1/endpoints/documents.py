@@ -136,6 +136,13 @@ async def delete_document(
         doc_id=doc_id,
     )
 
+    # Sync deletion to structured SQLite database
+    try:
+        from backend.app.database.session import sync_document_deletion
+        sync_document_deletion(doc_id)
+    except Exception as db_err:
+        logger.debug(f"SQLite deletion sync skipped: {db_err}")
+
     # 2. Delete file from local documents directory if present
     filename = None
     matching_files = list(settings.DOCUMENTS_DIR.glob(f"{doc_id}_*"))

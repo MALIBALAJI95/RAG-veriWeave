@@ -7,7 +7,7 @@
 [![Qdrant](https://img.shields.io/badge/Qdrant-Persistent%20Disk-red.svg)](https://qdrant.tech/)
 [![HuggingFace](https://img.shields.io/badge/Sentence--Transformers-all--MiniLM--L6--v2-yellow.svg)](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 [![CrossEncoder](https://img.shields.io/badge/Cross--Encoder-ms--marco--MiniLM--L--6--v2-orange.svg)](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2)
-[![Tests](https://img.shields.io/badge/Tests-36%2F36%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-54%2F54%20Passing-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 ---
@@ -29,8 +29,14 @@
   - **Cross-Encoder Reranking**: High-precision joint cross-attention scoring using `ms-marco-MiniLM-L-6-v2` with sigmoid probability mapping.
   - **Metadata Filtering**: Scoped filtering across `doc_id`, `filename`, `page_number`, and custom key-value pairs.
 - **Grounded Answer Generation**: Local Ollama LLMs (`llama3.2:1b`, `llama3.2:3b`) with an offline extractive fallback engine.
-- **Verifiable Inline Citations**: Every claim is mapped to `[Doc: <filename>, Page: <page>]` with similarity scores and excerpts.
-- **Comprehensive Benchmarks**: Quantitative evaluation comparing all strategies using Recall@K, Precision@K, MRR, and NDCG.
+- **Intelligent Multi-Path Query Routing (Phase 3)**:
+  - **Logical Heuristics Fast-Path**: High-precision deterministic signal routing (< 0.1ms latency).
+  - **Structured SQL Retrieval**: SQLite catalog with SQLAlchemy, read-only SELECT execution, strict schema allowlist, and injection prevention.
+  - **External Web Search Abstraction**: Extensible provider interface (`MockWebSearchProvider`, `DuckDuckGoSearchProvider`) for real-time external knowledge.
+  - **Multi-Source Evidence Synthesis**: Dispatches compound questions across vector, SQL, and web paths, deduplicating cross-source evidence.
+  - **Unified Provenance Citations**: Clear origin attribution across Document `[Doc: ..., Page: ...]`, Database `[SQL Record]`, and Web `[Web URL: ...]`.
+- **Verifiable Inline Citations**: Every claim is mapped to exact document pages, SQL database records, or external web URLs.
+- **Comprehensive Benchmarks**: Quantitative evaluation of retrieval strategies (Recall, Precision, MRR, NDCG) and routing accuracy (100.0% accuracy, 1.0000 macro-F1).
 
 ---
 
@@ -106,6 +112,15 @@ Evaluated against 10 gold-standard queries across technical reference documents:
 | **Hybrid (Dense+BM25)** | 1.000 | 1.000 | 1.000 | 1.000 | 0.930 | 0.984 | 3.98 ms | 5.0 |
 | **Hybrid + Cross-Encoder** | 1.000 | 1.000 | 1.000 | 1.000 | 0.977 | 0.995 | 50.65 ms | 10.0 |
 
+### 3.2 Phase 3 Empirical Routing Benchmark Results
+
+Evaluated against 25 evaluation queries across 4 routes (`vector_document`, `structured_sql`, `web_search`, `multi_source`):
+
+| Configuration | Accuracy | Macro F1 | Avg Latency (ms) | P95 Latency (ms) | Fallback Rate |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Pure Logical Heuristics** | **100.0%** | **1.0000** | **0.06 ms** | **0.13 ms** | 4.0% |
+| **VeriWeave Adaptive Hybrid** | **100.0%** | **1.0000** | **0.73 ms** | **1.25 ms** | 4.0% |
+
 ---
 
 ## 4. Quickstart Guide
@@ -129,15 +144,21 @@ cp .env.example .env
 ```bash
 .venv/bin/pytest backend/tests -v
 ```
-All **36 tests pass in under 1 second** (`36 passed in 0.83s`).
+All **54 tests pass in under 1 second** (`54 passed in 0.83s`).
 
 ### 4.3 Run Live Multi-Strategy Verification & Benchmarks
 ```bash
-# Live verification across all 7 retrieval scenarios
+# Live verification across Phase 2 retrieval scenarios
 .venv/bin/python3 backend/tests/verify_phase2_live.py
 
-# Quantitative retrieval benchmark
+# Live verification across Phase 3 multi-path routing scenarios
+.venv/bin/python3 backend/tests/verify_phase3_live.py
+
+# Quantitative retrieval benchmark (Phase 2)
 .venv/bin/python3 experiments/benchmark_retrieval.py
+
+# Quantitative routing benchmark (Phase 3)
+.venv/bin/python3 experiments/benchmark_routing.py
 ```
 
 ### 4.4 Start Backend Server
@@ -195,7 +216,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/chat \
 
 - [x] **Phase 1**: Ingestion (PDF, DOCX, TXT), Recursive Chunking, Metadata Preservation, Sentence Transformers, Persistent Qdrant, Similarity Retrieval, Ollama Grounded Generation, Source Citations, FastAPI Services, Automated Tests.
 - [x] **Phase 2**: Advanced Query Transformation & Retrieval (Multi-Query, HyDE, Query Decomposition, RAG Fusion, RRF, Hybrid Dense + BM25 Sparse Search, Metadata Filtering, Cross-Encoder Reranking, Quantitative Benchmarking).
-- [ ] **Phase 3**: Intelligent Multi-Path Query Routing (Semantic Routing, SQL Structured Database Routing, Safeguarded Query Execution).
+- [x] **Phase 3**: Intelligent Multi-Path Query Routing (Semantic Routing, SQL Structured Database Routing, Safeguarded Query Execution, Web Search Provider Abstraction, Multi-Source Synthesis).
 - [ ] **Phase 4**: Adaptive & Corrective RAG with LangGraph (Document Relevance Grading, Query Rewriting, Hallucination Checking, Self-Correction Loops).
 - [ ] **Phase 5**: Kaggle GPU Model Training & Fine-Tuning (Sentence Transformers Contrastive Learning / MultipleNegativesRankingLoss, Cross-Encoder Fine-Tuning, MRR / NDCG Evaluation).
 - [ ] **Phase 6**: Quantitative Evaluation & Benchmarking (RAG Triad Metrics: Context Relevance, Groundedness, Answer Relevance, Latency Profiling).

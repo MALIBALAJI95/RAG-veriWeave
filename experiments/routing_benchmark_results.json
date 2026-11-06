@@ -1,0 +1,658 @@
+{
+  "timestamp": "2026-11-06T11:20:21Z",
+  "total_queries": 25,
+  "configurations": {
+    "pure_logical": {
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "per_class": {
+        "vector_document": {
+          "tp": 7,
+          "fp": 0,
+          "fn": 0,
+          "support": 7,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "structured_sql": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "web_search": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "multi_source": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "confusion_matrix": {
+        "vector_document": {
+          "vector_document": 7,
+          "structured_sql": 0,
+          "web_search": 0,
+          "multi_source": 0
+        },
+        "structured_sql": {
+          "vector_document": 0,
+          "structured_sql": 6,
+          "web_search": 0,
+          "multi_source": 0
+        },
+        "web_search": {
+          "vector_document": 0,
+          "structured_sql": 0,
+          "web_search": 6,
+          "multi_source": 0
+        },
+        "multi_source": {
+          "vector_document": 0,
+          "structured_sql": 0,
+          "web_search": 0,
+          "multi_source": 6
+        }
+      },
+      "total_queries": 25,
+      "mean_latency_ms": 0.06,
+      "p50_latency_ms": 0.02,
+      "p95_latency_ms": 0.1,
+      "fallback_count": 1,
+      "fallback_rate": 0.04,
+      "predictions": [
+        {
+          "query_id": "route_vec_01",
+          "query_text": "What is the primary difference between dense and sparse retrieval in RAG?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.96
+        },
+        {
+          "query_id": "route_vec_02",
+          "query_text": "How does Reciprocal Rank Fusion combine rankings from different search algorithms?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_vec_03",
+          "query_text": "Explain the role of sensors, actuators, and environment perception in autonomous agents.",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_vec_04",
+          "query_text": "Summarize the key advantages of cross-encoder reranking over bi-encoder similarity.",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.5,
+          "method": "confidence_fallback",
+          "latency_ms": 0.1
+        },
+        {
+          "query_id": "route_vec_05",
+          "query_text": "What are the chunking strategies recommended for maintaining context boundaries in PDFs?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_vec_06",
+          "query_text": "Describe the hypothetical document generation process in HyDE.",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_vec_07",
+          "query_text": "What is the role of working memory versus long-term memory in AI agent architectures?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_sql_01",
+          "query_text": "How many documents are uploaded in the system?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_sql_02",
+          "query_text": "How many PDF files are indexed in the catalog database?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_sql_03",
+          "query_text": "List all uploaded files and their page counts",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_sql_04",
+          "query_text": "What is the total number of chunks indexed across all documents?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_sql_05",
+          "query_text": "What is the largest document by file size in the database?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_sql_06",
+          "query_text": "Show all documents uploaded with their indexing status",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_web_01",
+          "query_text": "What are the latest 2026 features released in LangChain and LangGraph?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_02",
+          "query_text": "What is the release date and breaking changes in Python 3.13?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_web_03",
+          "query_text": "Current industry benchmarks for Qdrant vector database in 2026",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_web_04",
+          "query_text": "What is the latest news regarding Google Gemini 2.0 Flash models?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        },
+        {
+          "query_id": "route_web_05",
+          "query_text": "Recent research papers published on speculative decoding in 2025 and 2026",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_06",
+          "query_text": "What are today's top open-source reranker models on Hugging Face?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_01",
+          "query_text": "Compare our internal document benchmarks with latest external web benchmarks",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_02",
+          "query_text": "Explain RAG architecture from our document and check how many total documents are in the database",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_03",
+          "query_text": "Contrast the agent architectures described in our uploaded files versus the latest online implementations",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_04",
+          "query_text": "Summarize our internal report findings and compare with today's industry standards",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_05",
+          "query_text": "What is the method in our uploaded paper and what is the file size in the database?",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_06",
+          "query_text": "In our document what is BM25 scoring and also find latest online research from 2026",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.01
+        }
+      ]
+    },
+    "adaptive_hybrid": {
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "per_class": {
+        "vector_document": {
+          "tp": 7,
+          "fp": 0,
+          "fn": 0,
+          "support": 7,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "structured_sql": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "web_search": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "multi_source": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "support": 6,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "confusion_matrix": {
+        "vector_document": {
+          "vector_document": 7,
+          "structured_sql": 0,
+          "web_search": 0,
+          "multi_source": 0
+        },
+        "structured_sql": {
+          "vector_document": 0,
+          "structured_sql": 6,
+          "web_search": 0,
+          "multi_source": 0
+        },
+        "web_search": {
+          "vector_document": 0,
+          "structured_sql": 0,
+          "web_search": 6,
+          "multi_source": 0
+        },
+        "multi_source": {
+          "vector_document": 0,
+          "structured_sql": 0,
+          "web_search": 0,
+          "multi_source": 6
+        }
+      },
+      "total_queries": 25,
+      "mean_latency_ms": 0.73,
+      "p50_latency_ms": 0.03,
+      "p95_latency_ms": 0.05,
+      "fallback_count": 1,
+      "fallback_rate": 0.04,
+      "predictions": [
+        {
+          "query_id": "route_vec_01",
+          "query_text": "What is the primary difference between dense and sparse retrieval in RAG?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.05
+        },
+        {
+          "query_id": "route_vec_02",
+          "query_text": "How does Reciprocal Rank Fusion combine rankings from different search algorithms?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_vec_03",
+          "query_text": "Explain the role of sensors, actuators, and environment perception in autonomous agents.",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_vec_04",
+          "query_text": "Summarize the key advantages of cross-encoder reranking over bi-encoder similarity.",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.5,
+          "method": "confidence_fallback",
+          "latency_ms": 17.52
+        },
+        {
+          "query_id": "route_vec_05",
+          "query_text": "What are the chunking strategies recommended for maintaining context boundaries in PDFs?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.05
+        },
+        {
+          "query_id": "route_vec_06",
+          "query_text": "Describe the hypothetical document generation process in HyDE.",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_vec_07",
+          "query_text": "What is the role of working memory versus long-term memory in AI agent architectures?",
+          "expected_route": "vector_document",
+          "predicted_route": "vector_document",
+          "is_correct": true,
+          "confidence": 0.88,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_sql_01",
+          "query_text": "How many documents are uploaded in the system?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_sql_02",
+          "query_text": "How many PDF files are indexed in the catalog database?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_sql_03",
+          "query_text": "List all uploaded files and their page counts",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_sql_04",
+          "query_text": "What is the total number of chunks indexed across all documents?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_sql_05",
+          "query_text": "What is the largest document by file size in the database?",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_sql_06",
+          "query_text": "Show all documents uploaded with their indexing status",
+          "expected_route": "structured_sql",
+          "predicted_route": "structured_sql",
+          "is_correct": true,
+          "confidence": 0.95,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_01",
+          "query_text": "What are the latest 2026 features released in LangChain and LangGraph?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_02",
+          "query_text": "What is the release date and breaking changes in Python 3.13?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_03",
+          "query_text": "Current industry benchmarks for Qdrant vector database in 2026",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_04",
+          "query_text": "What is the latest news regarding Google Gemini 2.0 Flash models?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_05",
+          "query_text": "Recent research papers published on speculative decoding in 2025 and 2026",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_web_06",
+          "query_text": "What are today's top open-source reranker models on Hugging Face?",
+          "expected_route": "web_search",
+          "predicted_route": "web_search",
+          "is_correct": true,
+          "confidence": 0.9,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_01",
+          "query_text": "Compare our internal document benchmarks with latest external web benchmarks",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        },
+        {
+          "query_id": "route_multi_02",
+          "query_text": "Explain RAG architecture from our document and check how many total documents are in the database",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_multi_03",
+          "query_text": "Contrast the agent architectures described in our uploaded files versus the latest online implementations",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_multi_04",
+          "query_text": "Summarize our internal report findings and compare with today's industry standards",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_multi_05",
+          "query_text": "What is the method in our uploaded paper and what is the file size in the database?",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.03
+        },
+        {
+          "query_id": "route_multi_06",
+          "query_text": "In our document what is BM25 scoring and also find latest online research from 2026",
+          "expected_route": "multi_source",
+          "predicted_route": "multi_source",
+          "is_correct": true,
+          "confidence": 0.92,
+          "method": "logical_rule",
+          "latency_ms": 0.02
+        }
+      ]
+    }
+  }
+}

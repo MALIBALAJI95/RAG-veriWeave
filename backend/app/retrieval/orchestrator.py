@@ -52,6 +52,8 @@ class RetrievalOrchestrator:
     ) -> Tuple[List[RetrievedChunk], RetrievalMetadata]:
         """Execute selected retrieval strategy, optionally rerank, and build structured diagnostics."""
         start_time = time.perf_counter()
+        if isinstance(strategy, str):
+            strategy = RetrievalStrategy(strategy)
         cleaned_query = query.strip()
         if not cleaned_query:
             elapsed_ms = (time.perf_counter() - start_time) * 1000

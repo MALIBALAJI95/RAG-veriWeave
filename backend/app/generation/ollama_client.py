@@ -1,10 +1,14 @@
 """Ollama client with robust connection handling and fallback grounded generation."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 import httpx
 from backend.app.core.exceptions import GenerationError
 from backend.app.core.logging import get_logger
-from backend.app.schemas.chat import RetrievedChunk
+
+if TYPE_CHECKING:
+    from backend.app.schemas.chat import RetrievedChunk
 
 logger = get_logger(__name__)
 

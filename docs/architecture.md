@@ -100,7 +100,15 @@ Every document chunk extracted by `RecursiveCharacterChunker` adheres to a stric
 ### 2.5 Generation & Grounding Engine
 - **Local LLM**: Ollama serving quantized instruction-tuned models (e.g. `llama3.2:1b`, `llama3.2:3b`, `qwen2.5:1.5b`).
 - **Resilient Fallback Mode**: When the Ollama daemon is offline, an extractive grounding synthesizer compiles verified source facts and inline citations directly from top retrieved chunks.
-- **Citation Attribution**: Every factual claim is mapped to `[Doc: <filename>, Page: <page>]` with similarity score and text snippets.
+- **Citation Attribution**: Every factual claim is mapped to verified citations across Documents, SQL records, and Web sources.
+
+### 2.6 Intelligent Multi-Path Query Routing & SQL Layer (Phase 3)
+- **`QueryAnalyzer`**: Extracts structural query signals, lexical intents, file extensions, and temporal markers in < 0.1ms.
+- **`RouteClassifier`**: Combines a high-precision deterministic logical rules fast-path with semantic Ollama classification for ambiguous queries and safe fallback to document retrieval.
+- **`SafeSQLExecutor`**: Read-only parameterized query execution over SQLite catalog (`documents`, `chunks`), blocking non-SELECT queries, multiple statements, comments, and enforcing `LIMIT 50`.
+- **`NLToSQLTranslator`**: Translates natural language catalog questions into safe SQL via regex pattern templates and LLM assistance.
+- **`WebSearchProvider`**: Provider-agnostic external search abstraction (`MockWebSearchProvider`, `DuckDuckGoSearchProvider`).
+- **`RoutingOrchestrator`**: Coordinates multi-path dispatch and multi-source synthesis, producing unified `EvidenceItem` streams and cross-source citations.
 
 ---
 
@@ -112,6 +120,7 @@ Every document chunk extracted by `RecursiveCharacterChunker` adheres to a stric
 | **Cross-Encoder Reranker** | `ms-marco-MiniLM-L-6-v2` | ~80 - 120 MB | CPU (lazy loaded) |
 | **Sparse Retrieval** | BM25 In-Memory Index | ~10 - 25 MB | RAM |
 | **Vector DB** | Qdrant Disk Storage | ~50 - 100 MB | Disk Mmap |
-| **Backend API** | FastAPI + Uvicorn | ~60 MB | Python 3.12 |
+| **Structured Catalog DB**| SQLite + SQLAlchemy | ~5 - 10 MB | Local Disk / Memory |
+| **Backend API & Router** | FastAPI + Routing Orchestrator | ~65 MB | Python 3.12 |
 | **LLM Inference** | Ollama `llama3.2:1b` (Q4_K_M) | ~1.3 GB | Metal MPS / Neural Engine |
-| **Total System Load**| **All Active** | **< 2.2 GB** | **Optimal for 8GB Mac** |
+| **Total System Load**| **All Active** | **< 2.3 GB** | **Optimal for 8GB Mac** |

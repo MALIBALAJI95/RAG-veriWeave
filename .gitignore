@@ -38,6 +38,9 @@ data/qdrant_storage/*
 !data/qdrant_storage/.gitkeep
 data/documents/*
 !data/documents/.gitkeep
+data/*.db
+*.db
+*.sqlite
 
 # Checkpoints and exported models
 exported_models/*

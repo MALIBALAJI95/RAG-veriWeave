@@ -114,7 +114,7 @@ class IngestionPipeline:
             )
 
             logger.info(f"Ingestion complete: '{display_name}' -> {upserted_count} chunks indexed")
-            return IngestionResponse(
+            response = IngestionResponse(
                 doc_id=clean_doc_id,
                 filename=display_name,
                 file_type=file_type,
@@ -124,6 +124,15 @@ class IngestionPipeline:
                 status="indexed",
                 message="Document successfully extracted, chunked, embedded, and indexed.",
             )
+
+            # Synchronize into structured SQLite database
+            try:
+                from backend.app.database.session import sync_document_ingestion
+                sync_document_ingestion(response, chunks)
+            except Exception as sync_err:
+                logger.debug(f"SQLite sync skipped or failed: {sync_err}")
+
+            return response
         except Exception as e:
             logger.error(f"Error during ingestion of '{display_name}': {e}")
             raise DocumentIngestionError(f"Error ingesting document '{display_name}': {str(e)}")

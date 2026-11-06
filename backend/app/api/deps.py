@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from backend.app.core.config import Settings, get_settings
+from backend.app.database.session import init_db
 from backend.app.embeddings.base import BaseEmbeddings
 from backend.app.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from backend.app.generation.grounded_generator import GroundedAnswerGenerator
@@ -16,7 +17,13 @@ from backend.app.retrieval.multi_query import MultiQueryRetriever
 from backend.app.retrieval.orchestrator import RetrievalOrchestrator
 from backend.app.retrieval.reranker import CrossEncoderReranker
 from backend.app.retrieval.similarity_retriever import SimilarityRetriever
+from backend.app.routing.classifier import RouteClassifier
+from backend.app.routing.handlers.sql_handler import SQLRouteHandler
+from backend.app.routing.handlers.vector_handler import VectorRouteHandler
+from backend.app.routing.handlers.web_handler import WebRouteHandler
+from backend.app.routing.orchestrator import RoutingOrchestrator
 from backend.app.storage.qdrant_client import QdrantStorageManager
+from backend.app.web_search.factory import get_web_search_provider
 
 
 # Singleton storage manager
@@ -48,6 +55,8 @@ def get_ingestion_pipeline() -> IngestionPipeline:
     settings = get_settings()
     storage = get_storage_manager()
     embeddings = get_embedding_model()
+    # Ensure SQLite DB is initialized
+    init_db(settings.SQLITE_DB_PATH)
     return IngestionPipeline(
         storage_manager=storage,
         embedding_model=embeddings,
@@ -181,6 +190,55 @@ def get_retrieval_orchestrator() -> RetrievalOrchestrator:
         hybrid_retriever=get_hybrid_retriever(),
         reranker=get_reranker(),
         fusion_engine=get_rrf_engine(),
+    )
+
+
+# Singleton Route Classifier
+@lru_cache()
+def get_route_classifier() -> RouteClassifier:
+    settings = get_settings()
+    ollama = get_ollama_client()
+    return RouteClassifier(
+        ollama_client=ollama,
+        confidence_threshold=settings.ROUTING_CONFIDENCE_THRESHOLD,
+    )
+
+
+# Singleton Vector Route Handler
+@lru_cache()
+def get_vector_route_handler() -> VectorRouteHandler:
+    return VectorRouteHandler(orchestrator=get_retrieval_orchestrator())
+
+
+# Singleton SQL Route Handler
+@lru_cache()
+def get_sql_route_handler() -> SQLRouteHandler:
+    settings = get_settings()
+    ollama = get_ollama_client()
+    init_db(settings.SQLITE_DB_PATH)
+    return SQLRouteHandler(
+        ollama_client=ollama,
+        max_rows=settings.SQL_MAX_ROWS,
+        timeout_seconds=settings.SQL_EXECUTION_TIMEOUT_SECONDS,
+    )
+
+
+# Singleton Web Route Handler
+@lru_cache()
+def get_web_route_handler() -> WebRouteHandler:
+    settings = get_settings()
+    provider = get_web_search_provider()
+    return WebRouteHandler(provider=provider, max_results=settings.WEB_SEARCH_MAX_RESULTS)
+
+
+# Singleton Intelligent Routing Orchestrator
+@lru_cache()
+def get_routing_orchestrator() -> RoutingOrchestrator:
+    return RoutingOrchestrator(
+        classifier=get_route_classifier(),
+        vector_handler=get_vector_route_handler(),
+        sql_handler=get_sql_route_handler(),
+        web_handler=get_web_route_handler(),
     )
 
 
