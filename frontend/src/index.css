@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  body {
+    @apply bg-background text-slate-100 font-sans antialiased;
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0F17;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1F293D;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+}
+
+/* Markdown prose overrides for dark AI interface */
+.prose-dark {
+  color: #E2E8F0;
+  line-height: 1.625;
+}
+.prose-dark p {
+  margin-bottom: 0.75rem;
+}
+.prose-dark p:last-child {
+  margin-bottom: 0;
+}
+.prose-dark strong {
+  color: #F8FAFC;
+  font-weight: 600;
+}
+.prose-dark ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.prose-dark ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.prose-dark li {
+  margin-bottom: 0.25rem;
+}
+.prose-dark pre {
+  background: #0A0E17;
+  border: 1px solid #1E293B;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  margin: 0.75rem 0;
+}
+.prose-dark code {
+  background: #131B2E;
+  color: #A5B4FC;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+}
+.prose-dark pre code {
+  background: transparent;
+  padding: 0;
+  color: #E2E8F0;
+}
+.prose-dark blockquote {
+  border-left: 3px solid #6366F1;
+  padding-left: 0.75rem;
+  color: #94A3B8;
+  font-style: italic;
+  margin: 0.75rem 0;
+}

@@ -194,6 +194,14 @@ All **69 tests pass in under 1 second** (`69 passed in 0.97s`).
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
+### 4.5 Start Frontend Application
+```bash
+cd frontend
+npm install
+npm run dev
+```
+- Web Application: `http://localhost:5173/`
+
 ---
 
 ## 5. API Usage Examples
