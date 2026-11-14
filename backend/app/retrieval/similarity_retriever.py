@@ -1,22 +1,21 @@
 """Baseline semantic similarity retriever using dense embeddings and Qdrant."""
 
-from typing import List, Optional
+from typing import Any, List, Optional
 from backend.app.core.exceptions import VectorStorageError
 from backend.app.core.logging import get_logger
 from backend.app.embeddings.base import BaseEmbeddings
 from backend.app.retrieval.base import BaseRetriever
 from backend.app.schemas.chat import MetadataFilter, RetrievedChunk
-from backend.app.storage.qdrant_client import QdrantStorageManager
 
 logger = get_logger(__name__)
 
 
 class SimilarityRetriever(BaseRetriever):
-    """Retrieves document chunks using dense cosine similarity in Qdrant."""
+    """Retrieves document chunks using dense cosine similarity."""
 
     def __init__(
         self,
-        storage_manager: QdrantStorageManager,
+        storage_manager: Any,
         embedding_model: BaseEmbeddings,
         collection_name: str = "veriweave_documents",
     ):

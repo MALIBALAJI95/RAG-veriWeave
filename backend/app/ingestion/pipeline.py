@@ -3,14 +3,13 @@
 import shutil
 import uuid
 from pathlib import Path
-from typing import BinaryIO, Optional
+from typing import Any, BinaryIO, Optional
 from backend.app.core.exceptions import DocumentIngestionError
 from backend.app.core.logging import get_logger
 from backend.app.embeddings.base import BaseEmbeddings
 from backend.app.ingestion.chunkers.recursive_chunker import RecursiveCharacterChunker
 from backend.app.ingestion.loaders.factory import get_loader_for_file
 from backend.app.schemas.document import IngestionResponse
-from backend.app.storage.qdrant_client import QdrantStorageManager
 
 logger = get_logger(__name__)
 
@@ -20,7 +19,7 @@ class IngestionPipeline:
 
     def __init__(
         self,
-        storage_manager: QdrantStorageManager,
+        storage_manager: Any,
         embedding_model: BaseEmbeddings,
         chunk_size: int = 500,
         chunk_overlap: int = 100,
@@ -125,12 +124,29 @@ class IngestionPipeline:
                 message="Document successfully extracted, chunked, embedded, and indexed.",
             )
 
-            # Synchronize into structured SQLite database
+            # Synchronize into structured database
             try:
-                from backend.app.database.session import sync_document_ingestion
+                from backend.app.database.session import sync_document_ingestion, get_db_session
+                from backend.app.database.models import DocumentBlobRecord
                 sync_document_ingestion(response, chunks)
+
+                # Persist file blob for ephemeral cloud persistence
+                if file_path.exists():
+                    with open(file_path, "rb") as bf:
+                        raw_bytes = bf.read()
+                    with get_db_session() as session:
+                        existing_blob = session.query(DocumentBlobRecord).filter(DocumentBlobRecord.doc_id == clean_doc_id).first()
+                        if existing_blob:
+                            existing_blob.data = raw_bytes
+                        else:
+                            session.add(DocumentBlobRecord(
+                                doc_id=clean_doc_id,
+                                filename=display_name,
+                                content_type=file_type,
+                                data=raw_bytes,
+                            ))
             except Exception as sync_err:
-                logger.debug(f"SQLite sync skipped or failed: {sync_err}")
+                logger.debug(f"Database sync skipped or failed: {sync_err}")
 
             return response
         except Exception as e:

@@ -6,11 +6,27 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
+    Text,
 )
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
+
+
+class DocumentBlobRecord(Base):
+    """Binary or text blob persistence for ephemeral cloud environments."""
+
+    __tablename__ = "document_blobs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    doc_id = Column(String(64), unique=True, nullable=False, index=True)
+    filename = Column(String(255), nullable=False)
+    content_type = Column(String(64), default="application/octet-stream", nullable=False)
+    data = Column(LargeBinary, nullable=True)
+    text_content = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
 class DocumentRecord(Base):

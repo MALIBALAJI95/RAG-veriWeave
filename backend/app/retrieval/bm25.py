@@ -1,13 +1,12 @@
 """Lexical sparse retrieval engine using BM25 Okapi."""
 
 import re
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from rank_bm25 import BM25Okapi
 from backend.app.core.logging import get_logger
 from backend.app.retrieval.base import BaseRetriever
 from backend.app.schemas.chat import MetadataFilter, RetrievedChunk
 from backend.app.schemas.document import DocumentChunk
-from backend.app.storage.qdrant_client import QdrantStorageManager
 
 logger = get_logger(__name__)
 
@@ -18,11 +17,11 @@ def tokenize_text(text: str) -> List[str]:
 
 
 class BM25Retriever(BaseRetriever):
-    """Lexical sparse retriever using BM25 over indexed Qdrant chunks."""
+    """Lexical sparse retriever using BM25 over indexed chunks."""
 
     def __init__(
         self,
-        storage_manager: QdrantStorageManager,
+        storage_manager: Any,
         collection_name: str = "veriweave_documents",
     ):
         self.storage = storage_manager

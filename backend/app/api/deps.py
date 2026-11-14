@@ -22,19 +22,22 @@ from backend.app.routing.handlers.sql_handler import SQLRouteHandler
 from backend.app.routing.handlers.vector_handler import VectorRouteHandler
 from backend.app.routing.handlers.web_handler import WebRouteHandler
 from backend.app.routing.orchestrator import RoutingOrchestrator
+from backend.app.storage.factory import StorageManagerType, create_storage_manager
 from backend.app.storage.qdrant_client import QdrantStorageManager
 from backend.app.web_search.factory import get_web_search_provider
 from backend.app.adaptive.grounding_validator import GroundingValidator
 from backend.app.adaptive.query_rewriter import AdaptiveQueryRewriter
 from backend.app.adaptive.relevance_grader import EvidenceRelevanceGrader
 from backend.app.adaptive.workflow import AdaptiveRAGWorkflow
+from backend.app.embeddings.cloudflare_embeddings import CloudflareEmbeddings
+from backend.app.generation.cloudflare_client import CloudflareWorkersAIClient
 
 
 # Singleton storage manager
 @lru_cache()
-def get_storage_manager() -> QdrantStorageManager:
+def get_storage_manager() -> StorageManagerType:
     settings = get_settings()
-    manager = QdrantStorageManager(storage_path=settings.QDRANT_STORAGE_PATH)
+    manager = create_storage_manager(settings)
     manager.ensure_collection(
         collection_name=settings.QDRANT_COLLECTION_NAME,
         vector_size=settings.EMBEDDING_DIMENSION,
@@ -46,6 +49,13 @@ def get_storage_manager() -> QdrantStorageManager:
 @lru_cache()
 def get_embedding_model() -> BaseEmbeddings:
     settings = get_settings()
+    if (settings.EMBEDDING_PROVIDER or "").lower() == "cloudflare" and settings.CLOUDFLARE_ACCOUNT_ID:
+        return CloudflareEmbeddings(
+            account_id=settings.CLOUDFLARE_ACCOUNT_ID,
+            api_token=settings.CLOUDFLARE_API_TOKEN,
+            model=settings.CLOUDFLARE_EMBEDDING_MODEL,
+            dimension=settings.EMBEDDING_DIMENSION,
+        )
     return SentenceTransformerEmbeddings(
         model_name=settings.EMBEDDING_MODEL_NAME,
         device=settings.EMBEDDING_DEVICE,
@@ -59,8 +69,8 @@ def get_ingestion_pipeline() -> IngestionPipeline:
     settings = get_settings()
     storage = get_storage_manager()
     embeddings = get_embedding_model()
-    # Ensure SQLite DB is initialized
-    init_db(settings.SQLITE_DB_PATH)
+    # Initialize DB (PostgreSQL if DATABASE_URL or SQLite)
+    init_db(settings.SQLITE_DB_PATH, database_url=settings.resolved_database_url)
     return IngestionPipeline(
         storage_manager=storage,
         embedding_model=embeddings,
@@ -71,10 +81,18 @@ def get_ingestion_pipeline() -> IngestionPipeline:
     )
 
 
-# Singleton Ollama client
+# Singleton LLM client (Ollama or Cloudflare Workers AI)
 @lru_cache()
-def get_ollama_client() -> OllamaClient:
+def get_ollama_client() -> OllamaClient | CloudflareWorkersAIClient:
     settings = get_settings()
+    if (settings.LLM_PROVIDER or "").lower() == "cloudflare" and settings.CLOUDFLARE_ACCOUNT_ID:
+        return CloudflareWorkersAIClient(
+            account_id=settings.CLOUDFLARE_ACCOUNT_ID,
+            api_token=settings.CLOUDFLARE_API_TOKEN,
+            model=settings.CLOUDFLARE_LLM_MODEL,
+            temperature=settings.OLLAMA_TEMPERATURE,
+            enable_fallback=settings.ENABLE_FALLBACK_GENERATOR,
+        )
     return OllamaClient(
         base_url=settings.OLLAMA_BASE_URL,
         model=settings.OLLAMA_MODEL,
@@ -219,7 +237,7 @@ def get_vector_route_handler() -> VectorRouteHandler:
 def get_sql_route_handler() -> SQLRouteHandler:
     settings = get_settings()
     ollama = get_ollama_client()
-    init_db(settings.SQLITE_DB_PATH)
+    init_db(settings.SQLITE_DB_PATH, database_url=settings.resolved_database_url)
     return SQLRouteHandler(
         ollama_client=ollama,
         max_rows=settings.SQL_MAX_ROWS,

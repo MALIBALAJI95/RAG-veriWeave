@@ -18,6 +18,23 @@ export const apiClient = axios.create({
   },
 });
 
+// Dynamic interceptor to use user-configured API URL from settings or environment
+apiClient.interceptors.request.use((config) => {
+  try {
+    const rawStorage = localStorage.getItem('veriweave-settings-storage');
+    if (rawStorage) {
+      const parsed = JSON.parse(rawStorage);
+      const configuredUrl = parsed?.state?.apiBaseUrl;
+      if (configuredUrl && typeof configuredUrl === 'string' && configuredUrl.trim() !== '') {
+        config.baseURL = configuredUrl.replace(/\/+$/, '');
+      }
+    }
+  } catch {
+    // Keep default baseURL if parsing fails
+  }
+  return config;
+});
+
 export interface ApiErrorDetails {
   message: string;
   statusCode?: number;

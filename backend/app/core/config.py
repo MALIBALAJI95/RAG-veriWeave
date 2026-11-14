@@ -84,8 +84,40 @@ class Settings(BaseSettings):
     MIN_RELEVANT_EVIDENCE_COUNT: int = 1
     ENABLE_HALLUCINATION_CHECK: bool = True
 
+    # Cloud Deployment & Persistence (Supabase / Render / Cloudflare Workers AI)
+    DATABASE_URL: Optional[str] = None
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_KEY: Optional[str] = None
+    SUPABASE_DB_URL: Optional[str] = None
+    VECTOR_STORAGE_BACKEND: str = "qdrant"  # "qdrant" or "pgvector" or "supabase"
+    DOCUMENT_STORAGE_BACKEND: str = "local"  # "local", "database", or "supabase"
+    SUPABASE_STORAGE_BUCKET: str = "veriweave-documents"
+
+    # Hosted LLM & Embeddings (Cloudflare Workers AI Free Tier)
+    LLM_PROVIDER: str = "ollama"  # "ollama", "cloudflare", "fallback"
+    CLOUDFLARE_ACCOUNT_ID: Optional[str] = None
+    CLOUDFLARE_API_TOKEN: Optional[str] = None
+    CLOUDFLARE_LLM_MODEL: str = "@cf/meta/llama-3.2-1b-instruct"
+    EMBEDDING_PROVIDER: str = "local"  # "local" or "cloudflare"
+    CLOUDFLARE_EMBEDDING_MODEL: str = "@cf/baai/bge-small-en-v1.5"
+
+    # Security & Production Limits
+    CORS_ORIGINS: list[str] = ["*"]
+    MAX_UPLOAD_SIZE_BYTES: int = 10485760  # 10 MB max file upload
+    VERIWEAVE_API_KEY: Optional[str] = None
+
     # Logging
     LOG_LEVEL: str = "INFO"
+
+    @property
+    def resolved_database_url(self) -> Optional[str]:
+        """Return normalized PostgreSQL URL if provided (converting postgres:// to postgresql://)."""
+        raw_url = self.SUPABASE_DB_URL or self.DATABASE_URL
+        if not raw_url:
+            return None
+        if raw_url.startswith("postgres://"):
+            return raw_url.replace("postgres://", "postgresql://", 1)
+        return raw_url
 
     def ensure_directories(self) -> None:
         """Ensure runtime directories exist on the filesystem."""

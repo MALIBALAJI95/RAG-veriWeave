@@ -1,5 +1,6 @@
 """Health and diagnostics endpoints."""
 
+from typing import Any
 from fastapi import APIRouter, Depends
 from backend.app.api.deps import (
     get_embedding_model,
@@ -9,9 +10,7 @@ from backend.app.api.deps import (
 )
 from backend.app.core.config import Settings
 from backend.app.embeddings.base import BaseEmbeddings
-from backend.app.generation.ollama_client import OllamaClient
 from backend.app.schemas.health import ComponentStatus, HealthResponse
-from backend.app.storage.qdrant_client import QdrantStorageManager
 
 router = APIRouter()
 
@@ -20,24 +19,25 @@ router = APIRouter()
     "",
     response_model=HealthResponse,
     summary="System health status",
-    description="Reports the operational status of vector storage, embedding engine, and Ollama LLM.",
+    description="Reports the operational status of vector storage, embedding engine, and LLM provider.",
 )
 async def check_health(
     settings: Settings = Depends(get_settings),
-    storage: QdrantStorageManager = Depends(get_storage_manager),
+    storage: Any = Depends(get_storage_manager),
     embeddings: BaseEmbeddings = Depends(get_embedding_model),
-    ollama: OllamaClient = Depends(get_ollama_client),
+    ollama: Any = Depends(get_ollama_client),
 ) -> HealthResponse:
     components = {}
 
     # Check Vector Storage
     try:
         col_info = storage.get_collection_info(settings.QDRANT_COLLECTION_NAME)
+        engine_name = col_info.get("backend") or ("Supabase pgvector" if settings.VECTOR_STORAGE_BACKEND in ("pgvector", "supabase") else "Qdrant (persistent disk)")
         components["vector_storage"] = ComponentStatus(
             status="ok",
             details={
-                "engine": "Qdrant (persistent disk)",
-                "storage_path": str(settings.QDRANT_STORAGE_PATH),
+                "engine": engine_name,
+                "storage_path": str(settings.QDRANT_STORAGE_PATH) if engine_name.startswith("Qdrant") else "Cloud PostgreSQL (pgvector)",
                 "collection": settings.QDRANT_COLLECTION_NAME,
                 "vectors_count": col_info.get("vectors_count", 0),
                 "points_count": col_info.get("points_count", 0),

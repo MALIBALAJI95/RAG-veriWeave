@@ -1,12 +1,10 @@
 """Hypothetical Document Embeddings (HyDE) retrieval engine."""
 
-from typing import List, Optional
+from typing import Any, List, Optional
 from backend.app.core.logging import get_logger
 from backend.app.embeddings.base import BaseEmbeddings
-from backend.app.generation.ollama_client import OllamaClient
 from backend.app.retrieval.base import BaseRetriever
 from backend.app.schemas.chat import MetadataFilter, RetrievedChunk
-from backend.app.storage.qdrant_client import QdrantStorageManager
 
 logger = get_logger(__name__)
 
@@ -24,9 +22,9 @@ class HyDERetriever(BaseRetriever):
 
     def __init__(
         self,
-        storage_manager: QdrantStorageManager,
+        storage_manager: Any,
         embedding_model: BaseEmbeddings,
-        ollama_client: OllamaClient,
+        ollama_client: Any,
         collection_name: str = "veriweave_documents",
     ):
         self.storage = storage_manager

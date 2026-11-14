@@ -20,30 +20,55 @@ _engine = None
 _SessionFactory = None
 
 
-def init_db(db_path: Path) -> sessionmaker:
-    """Initialize SQLite database engine and ensure tables exist."""
+def init_db(
+    db_path: Optional[Path] = None,
+    database_url: Optional[str] = None,
+) -> sessionmaker:
+    """Initialize database engine (PostgreSQL if URL provided, else SQLite) and ensure tables exist."""
     global _engine, _SessionFactory
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    sqlite_url = f"sqlite:///{db_path.resolve()}"
-    logger.info(f"Initializing SQLite structured database at: {sqlite_url}")
+    
+    if database_url:
+        logger.info(f"Initializing cloud PostgreSQL database session: {database_url.split('@')[-1] if '@' in database_url else 'configured'}")
+        _engine = create_engine(
+            database_url,
+            pool_pre_ping=True,
+            pool_recycle=300,
+        )
+    else:
+        target_path = db_path or Path("./data/veriweave.db")
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        sqlite_url = f"sqlite:///{target_path.resolve()}"
+        logger.info(f"Initializing SQLite structured database at: {sqlite_url}")
+        _engine = create_engine(
+            sqlite_url,
+            connect_args={"check_same_thread": False},
+            pool_pre_ping=True,
+        )
 
-    _engine = create_engine(
-        sqlite_url,
-        connect_args={"check_same_thread": False},
-        pool_pre_ping=True,
-    )
     Base.metadata.create_all(bind=_engine)
     _SessionFactory = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
     return _SessionFactory
 
 
+def reset_engine() -> None:
+    """Reset the global database engine and session factory."""
+    global _engine, _SessionFactory
+    if _engine is not None:
+        _engine.dispose()
+    _engine = None
+    _SessionFactory = None
+
+
 def get_session_factory() -> sessionmaker:
-    """Return configured session factory or initialize with default path."""
+    """Return configured session factory or initialize with default settings."""
     global _SessionFactory
     if _SessionFactory is None:
         from backend.app.core.config import get_settings
         settings = get_settings()
-        _SessionFactory = init_db(settings.SQLITE_DB_PATH)
+        if settings.resolved_database_url:
+            _SessionFactory = init_db(database_url=settings.resolved_database_url)
+        else:
+            _SessionFactory = init_db(db_path=settings.SQLITE_DB_PATH)
     return _SessionFactory
 
 

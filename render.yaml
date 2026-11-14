@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: veriweave-api
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: false
+      - key: VECTOR_STORAGE_BACKEND
+        value: pgvector
+      - key: LLM_PROVIDER
+        value: cloudflare
+      - key: EMBEDDING_PROVIDER
+        value: local
+      - key: CLOUDFLARE_LLM_MODEL
+        value: "@cf/meta/llama-3.2-1b-instruct"
+      - key: CLOUDFLARE_EMBEDDING_MODEL
+        value: "@cf/baai/bge-small-en-v1.5"
+      - key: ENABLE_FALLBACK_GENERATOR
+        value: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: SUPABASE_DB_URL
+        sync: false
+      - key: CLOUDFLARE_ACCOUNT_ID
+        sync: false
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false
